@@ -1,0 +1,598 @@
+import React, { useState, useEffect } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { startupsService, evaluationsService, auditLogsService } from '@/services/api'
+import { Startup, Evaluation, EVALUATION_CRITERIA, EvaluationCriteria } from '@/types'
+import { getFileUrl } from '@/lib/ranking'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { Slider } from '@/components/ui/slider'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
+import { LoginModal } from '@/components/LoginModal'
+import {
+  ClipboardCheck,
+  CheckCircle2,
+  Lock,
+  Sparkles,
+  Leaf,
+  Users,
+  Building,
+  ArrowLeft,
+  ArrowRight,
+  Send,
+  HelpCircle,
+  Clock,
+  ShieldCheck,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react'
+
+export default function EvaluatorPage() {
+  const { user, isAuthenticated, isEvaluator, isAdmin } = useAuth()
+  const { toast } = useToast()
+
+  const [startups, setStartups] = useState<Startup[]>([])
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([])
+  const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [reviewMode, setReviewMode] = useState(false)
+
+  // Form State
+  const [formScores, setFormScores] = useState<EvaluationCriteria>({
+    score_esg: 15,
+    score_criatividade: 15,
+    score_engajamento: 12,
+    score_figurino: 12,
+    score_narrativa: 12,
+    score_briefing: 8,
+    score_gestao_tempo: 4,
+  })
+  const [feedback, setFeedback] = useState('')
+  const [currentEvalId, setCurrentEvalId] = useState<string | null>(null)
+  const [isFinalized, setIsFinalized] = useState(false)
+
+  const fetchEvaluations = async () => {
+    if (!user) return
+    try {
+      const [allStartups, myEvals] = await Promise.all([
+        startupsService.getAll(),
+        evaluationsService.getByEvaluator(user.id),
+      ])
+      setStartups(allStartups)
+      setEvaluations(myEvals)
+    } catch (err) {
+      console.error('Erro ao buscar avaliações:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchEvaluations()
+    } else {
+      setLoading(false)
+    }
+  }, [isAuthenticated, user?.id])
+
+  // Carregar avaliação da startup selecionada
+  const handleSelectStartup = (startup: Startup) => {
+    setSelectedStartup(startup)
+    setReviewMode(false)
+
+    const existing = evaluations.find((e) => e.startup === startup.id)
+    if (existing) {
+      setCurrentEvalId(existing.id)
+      setFormScores({
+        score_esg: existing.score_esg ?? 15,
+        score_criatividade: existing.score_criatividade ?? 15,
+        score_engajamento: existing.score_engajamento ?? 12,
+        score_figurino: existing.score_figurino ?? 12,
+        score_narrativa: existing.score_narrativa ?? 12,
+        score_briefing: existing.score_briefing ?? 8,
+        score_gestao_tempo: existing.score_gestao_tempo ?? 4,
+      })
+      setFeedback(existing.feedback || '')
+      setIsFinalized(!!existing.is_finalized)
+    } else {
+      setCurrentEvalId(null)
+      setFormScores({
+        score_esg: 15,
+        score_criatividade: 15,
+        score_engajamento: 12,
+        score_figurino: 12,
+        score_narrativa: 12,
+        score_briefing: 8,
+        score_gestao_tempo: 4,
+      })
+      setFeedback('')
+      setIsFinalized(false)
+    }
+  }
+
+  const handleScoreChange = (key: keyof EvaluationCriteria, val: number, max: number) => {
+    if (isFinalized) return
+    const clamped = Math.max(0, Math.min(val, max))
+    setFormScores((prev) => ({
+      ...prev,
+      [key]: clamped,
+    }))
+  }
+
+  const calculateTotal = () => {
+    return (
+      (formScores.score_esg || 0) +
+      (formScores.score_criatividade || 0) +
+      (formScores.score_engajamento || 0) +
+      (formScores.score_figurino || 0) +
+      (formScores.score_narrativa || 0) +
+      (formScores.score_briefing || 0) +
+      (formScores.score_gestao_tempo || 0)
+    )
+  }
+
+  // Envio final com trava de edição (PRD Regra de Negócio 3)
+  const handleSubmitEvaluation = async () => {
+    if (!user || !selectedStartup) return
+    if (isFinalized) {
+      toast({
+        title: 'Avaliação Bloqueada',
+        description: 'Esta avaliação já foi finalizada e travada.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    // Validação automática: impedir envio se algum critério exceder ou for inválido
+    for (const c of EVALUATION_CRITERIA) {
+      const val = formScores[c.key]
+      if (val === undefined || val === null || val < 0 || val > c.max) {
+        toast({
+          title: 'Nota Inválida',
+          description: `O critério ${c.label} deve ter nota entre 0 e ${c.max}.`,
+          variant: 'destructive',
+        })
+        return
+      }
+    }
+
+    if (!feedback.trim()) {
+      toast({
+        title: 'Feedback Obrigatório',
+        description: 'Por favor, insira uma breve observação ou parecer para a startup.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const payload: Partial<Evaluation> = {
+        id: currentEvalId || undefined,
+        startup: selectedStartup.id,
+        evaluator: user.id,
+        score_esg: formScores.score_esg,
+        score_criatividade: formScores.score_criatividade,
+        score_engajamento: formScores.score_engajamento,
+        score_figurino: formScores.score_figurino,
+        score_narrativa: formScores.score_narrativa,
+        score_briefing: formScores.score_briefing,
+        score_gestao_tempo: formScores.score_gestao_tempo,
+        feedback: feedback.trim(),
+        is_finalized: true, // Trava de edição ativada
+      }
+
+      const saved = await evaluationsService.saveEvaluation(payload)
+      setCurrentEvalId(saved.id)
+      setIsFinalized(true)
+
+      // Auditoria
+      await auditLogsService.log(
+        'AVALIAÇÃO_FINALIZADA',
+        `Nota total atribuída: ${calculateTotal()}/100. Feedback: "${feedback.trim().substring(0, 50)}..."`,
+        selectedStartup.name,
+      )
+
+      toast({
+        title: 'Avaliação Enviada com Sucesso!',
+        description: `Nota de ${calculateTotal()}/100 registrada e bloqueada com segurança.`,
+      })
+
+      await fetchEvaluations()
+      setReviewMode(false)
+    } catch (err) {
+      console.error('Erro ao submeter avaliação:', err)
+      toast({
+        title: 'Erro ao Enviar',
+        description: 'Não foi possível salvar sua avaliação. Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const getPillarBadge = (pillar: string) => {
+    switch (pillar) {
+      case 'Ambiental':
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <Leaf className="w-3 h-3 text-emerald-600" /> Ambiental
+          </span>
+        )
+      case 'Social':
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-300">
+            <Users className="w-3 h-3 text-blue-600" /> Social
+          </span>
+        )
+      case 'Governança':
+        return (
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+            <Building className="w-3 h-3 text-amber-600" /> Governança
+          </span>
+        )
+      default:
+        return null
+    }
+  }
+
+  // Se não autenticado
+  if (!isAuthenticated) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto min-h-[60vh]">
+        <div className="w-16 h-16 rounded-3xl bg-[#1A237E] text-[#FFD600] flex items-center justify-center mb-4 shadow-xl">
+          <ClipboardCheck className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-black text-[#1A237E] mb-2">Banca Examinadora</h2>
+        <p className="text-sm text-slate-600 mb-6">
+          Identifique-se com seu código único de avaliador ou credencial institucional para iniciar
+          as avaliações da noite.
+        </p>
+        <Button
+          onClick={() => setLoginModalOpen(true)}
+          className="w-full h-12 bg-[#1A237E] hover:bg-[#283593] text-white font-bold rounded-2xl shadow-lg"
+        >
+          Acessar como Avaliador
+        </Button>
+        <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6">
+      {/* Header do Módulo do Avaliador */}
+      <div className="bg-[#1A237E] text-white rounded-3xl p-5 sm:p-6 shadow-xl border-2 border-[#FFD600] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FFD600] text-[#1A237E]">
+              Banca Oficial
+            </span>
+            <span className="text-xs text-blue-200">Ambiente Seguro</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-white">{user?.name}</h1>
+          <p className="text-xs text-blue-200">
+            {evaluations.filter((e) => e.is_finalized).length} de {startups.length} startups
+            avaliadas
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-stretch sm:self-auto justify-between">
+          <div className="text-right">
+            <span className="text-[10px] text-blue-200 block uppercase font-bold">Progresso</span>
+            <span className="text-lg font-black text-[#FFD600]">
+              {Math.round(
+                (evaluations.filter((e) => e.is_finalized).length / (startups.length || 1)) * 100,
+              )}
+              %
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchEvaluations}
+            className="text-white hover:bg-white/10 rounded-xl"
+            title="Atualizar lista"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* SELETOR DE STARTUPS (Cards mobile-first com status de avaliação) */}
+      {!selectedStartup ? (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-black text-[#1A237E] uppercase tracking-wider">
+              Startups Agendadas para Apresentação
+            </h2>
+            <span className="text-xs text-slate-500 font-medium">
+              Selecione uma equipe para avaliar
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {startups.map((s) => {
+              const evalRecord = evaluations.find((e) => e.startup === s.id)
+              const finalized = !!evalRecord?.is_finalized
+
+              return (
+                <Card
+                  key={s.id}
+                  onClick={() => handleSelectStartup(s)}
+                  className={`cursor-pointer p-5 rounded-3xl border-2 transition-all hover:scale-[1.01] active:scale-[0.99] shadow-sm relative overflow-hidden ${
+                    finalized
+                      ? 'bg-emerald-50/50 border-emerald-300'
+                      : 'bg-white border-slate-200 hover:border-[#1A237E]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-8 h-8 rounded-xl bg-[#1A237E]/10 text-[#1A237E] flex items-center justify-center font-bold text-xs">
+                        {s.order || '#'}
+                      </span>
+                      {getPillarBadge(s.esg_pillar)}
+                    </div>
+
+                    {finalized ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-300">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Avaliado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300 animate-pulse">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" /> Pendente
+                      </span>
+                    )}
+                  </div>
+
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block">
+                    Herói Fictício
+                  </span>
+                  <h3 className="text-lg font-black text-[#1A237E] truncate">{s.hero_name}</h3>
+                  <p className="text-xs font-semibold text-slate-600 mb-2">{s.name}</p>
+
+                  <p className="text-xs text-slate-500 line-clamp-2 italic mb-3">
+                    "{s.synopsis || 'Sem sinopse cadastrada.'}"
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <span className="text-[11px] font-bold text-[#1A237E]">
+                      {finalized ? 'Visualizar notas submetidas' : 'Iniciar avaliação (<60s)'}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-[#1A237E]" />
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        </section>
+      ) : (
+        /* FORMULÁRIO DE AVALIAÇÃO DOS 7 CRITÉRIOS (Mobile First / Touch Friendly) */
+        <section className="space-y-6">
+          {/* Top Bar da Startup Selecionada */}
+          <div className="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedStartup(null)}
+              className="rounded-xl font-bold text-xs h-9"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Voltar à Lista
+            </Button>
+
+            <div className="text-right">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Avaliando
+              </span>
+              <h2 className="text-base font-black text-[#1A237E]">{selectedStartup.hero_name}</h2>
+              <span className="text-xs text-slate-500">{selectedStartup.name}</span>
+            </div>
+          </div>
+
+          {/* Banner de Trava de Edição se já Finalizado */}
+          {isFinalized && (
+            <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl flex items-center gap-3 text-amber-900">
+              <Lock className="w-6 h-6 text-amber-700 flex-shrink-0" />
+              <div className="text-xs">
+                <strong className="block font-bold">Avaliação Bloqueada para Edição</strong>
+                Suas notas foram submetidas e consolidadas no servidor. Apenas a comissão
+                organizadora pode solicitar liberação para reavaliação.
+              </div>
+            </div>
+          )}
+
+          {/* MODO REVISÃO ANTES DO ENVIO */}
+          {reviewMode ? (
+            <div className="bg-white rounded-3xl p-6 border-2 border-[#1A237E]/30 shadow-xl space-y-6">
+              <div className="text-center space-y-1">
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-[#FFD600] text-[#1A237E] uppercase tracking-wider">
+                  Etapa de Revisão Final
+                </span>
+                <h3 className="text-2xl font-black text-[#1A237E]">
+                  Confirmar Pontuação: {calculateTotal()} / 100
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Verifique suas notas antes de enviar. O envio travará o formulário.
+                </p>
+              </div>
+
+              <div className="divide-y divide-slate-100 bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                {EVALUATION_CRITERIA.map((crit) => (
+                  <div key={crit.key} className="py-2.5 flex items-center justify-between text-xs">
+                    <div>
+                      <strong className="font-bold text-slate-800">{crit.label}</strong>
+                      <span className="text-slate-400 block text-[10px]">{crit.description}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-base font-black text-[#1A237E]">
+                        {formScores[crit.key]}
+                      </span>
+                      <span className="text-[10px] text-slate-400"> / {crit.max}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                <span className="text-[11px] font-bold text-[#1A237E] uppercase tracking-wider block mb-1">
+                  Parecer & Feedback Registrado:
+                </span>
+                <p className="text-xs text-slate-700 italic">"{feedback}"</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setReviewMode(false)}
+                  className="flex-1 h-12 font-bold rounded-2xl text-xs"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Ajustar Notas
+                </Button>
+
+                <Button
+                  onClick={handleSubmitEvaluation}
+                  disabled={submitting}
+                  className="flex-1 h-12 bg-[#2E7D32] hover:bg-[#1b5e20] text-white font-bold rounded-2xl shadow-lg text-sm flex items-center justify-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  {submitting ? 'Enviando...' : 'Confirmar & Finalizar Avaliação'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* FORMULÁRIO COM OS 7 CRITÉRIOS */
+            <div className="space-y-4">
+              {/* Box da Nota Total em Tempo Real */}
+              <div className="sticky top-20 z-20 bg-gradient-to-r from-[#1A237E] to-[#283593] text-white p-4 rounded-2xl shadow-xl flex items-center justify-between border-2 border-[#FFD600]">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#FFD600] block">
+                    Total Acumulado
+                  </span>
+                  <span className="text-xs text-blue-200 font-medium">Soma dos 7 critérios</span>
+                </div>
+                <div className="text-right flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-[#FFD600]">
+                    {calculateTotal()}
+                  </span>
+                  <span className="text-xs text-blue-200 font-bold">/ 100</span>
+                </div>
+              </div>
+
+              {/* Lista dos 7 Critérios */}
+              <div className="space-y-3">
+                {EVALUATION_CRITERIA.map((crit, index) => {
+                  const val = formScores[crit.key]
+                  return (
+                    <Card
+                      key={crit.key}
+                      className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 bg-white shadow-xs space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-[#1A237E]/10 text-[#1A237E] font-black text-[11px] flex items-center justify-center">
+                              {index + 1}
+                            </span>
+                            <h3 className="font-extrabold text-sm text-[#1A237E]">{crit.label}</h3>
+                            {crit.priorityOrder && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                {crit.priorityOrder}º Desempate
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{crit.description}</p>
+                        </div>
+
+                        {/* Input Numérico / Badge de Nota */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={crit.max}
+                            disabled={isFinalized}
+                            value={val}
+                            onChange={(e) =>
+                              handleScoreChange(crit.key, parseFloat(e.target.value) || 0, crit.max)
+                            }
+                            className="w-16 h-10 text-center font-black text-base text-[#1A237E] rounded-xl border-slate-300 focus:border-[#1A237E]"
+                          />
+                          <span className="text-xs font-bold text-slate-400">/ {crit.max}</span>
+                        </div>
+                      </div>
+
+                      {/* Slider Touch Friendly com bolha */}
+                      <div className="pt-2 px-1">
+                        <Slider
+                          disabled={isFinalized}
+                          value={[val]}
+                          min={0}
+                          max={crit.max}
+                          step={1}
+                          onValueChange={([newVal]) =>
+                            handleScoreChange(crit.key, newVal, crit.max)
+                          }
+                          className="py-2 cursor-pointer"
+                        />
+                      </div>
+                    </Card>
+                  )
+                })}
+              </div>
+
+              {/* Feedback Qualitativo (PRD 6 - Observações qualitativas) */}
+              <Card className="p-5 rounded-2xl border-2 border-slate-200 bg-white shadow-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#1A237E] uppercase tracking-wider">
+                    Parecer Técnico / Observações Construtivas (Obrigatório)
+                  </label>
+                  <span className="text-[11px] text-slate-400">Será compilado para a startup</span>
+                </div>
+                <Textarea
+                  disabled={isFinalized}
+                  placeholder="Descreva pontos fortes do herói, consistência com o tema ESG e oportunidades de melhoria..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  rows={3}
+                  className="rounded-xl border-slate-300 text-sm focus:border-[#1A237E]"
+                />
+              </Card>
+
+              {/* Botão de Envio / Revisão */}
+              {!isFinalized ? (
+                <div className="pt-2">
+                  <Button
+                    onClick={() => {
+                      if (!feedback.trim()) {
+                        toast({
+                          title: 'Feedback Obrigatório',
+                          description:
+                            'Por favor, escreva um parecer para a startup antes de revisar.',
+                          variant: 'destructive',
+                        })
+                        return
+                      }
+                      setReviewMode(true)
+                    }}
+                    className="w-full h-14 bg-[#1A237E] hover:bg-[#283593] text-white font-extrabold text-base rounded-2xl shadow-xl flex items-center justify-center gap-2"
+                  >
+                    <span>Revisar Nota Total ({calculateTotal()}/100)</span>
+                    <ArrowRight className="w-5 h-5 text-[#FFD600]" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl text-center text-emerald-900 font-bold text-sm">
+                  ✓ Avaliação concluída e registrada para {selectedStartup.hero_name}.
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+    </div>
+  )
+}
