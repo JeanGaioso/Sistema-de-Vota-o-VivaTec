@@ -76,6 +76,7 @@ export default function AdminPage() {
   // Form de Startup
   const [startupName, setStartupName] = useState('')
   const [heroName, setHeroName] = useState('')
+  const [estudantes, setEstudantes] = useState('')
   const [esgPillar, setEsgPillar] = useState<ESGPillar>('Ambiental')
   const [synopsis, setSynopsis] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
@@ -188,6 +189,7 @@ export default function AdminPage() {
       setEditingStartup(startup)
       setStartupName(startup.name)
       setHeroName(startup.hero_name)
+      setEstudantes(startup.estudantes || '')
       setEsgPillar(startup.esg_pillar)
       setSynopsis(startup.synopsis || '')
       setOrder(startup.order || 1)
@@ -195,6 +197,7 @@ export default function AdminPage() {
       setEditingStartup(null)
       setStartupName('')
       setHeroName('')
+      setEstudantes('')
       setEsgPillar('Ambiental')
       setSynopsis('')
       setOrder(startups.length + 1)
@@ -219,6 +222,7 @@ export default function AdminPage() {
       const formData = new FormData()
       formData.append('name', startupName.trim())
       formData.append('hero_name', heroName.trim())
+      formData.append('estudantes', estudantes.trim())
       formData.append('esg_pillar', esgPillar)
       formData.append('synopsis', synopsis.trim())
       formData.append('order', String(order))
@@ -321,47 +325,47 @@ export default function AdminPage() {
   if (!isAuthenticated || !isAdmin) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto min-h-[60vh]">
-        <div className="w-16 h-16 rounded-3xl bg-red-100 text-red-700 flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-3xl bg-pink-100 text-[#E11D74] flex items-center justify-center mb-4">
           <ShieldAlert className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 mb-2">Acesso Restrito à Comissão</h2>
+        <h2 className="text-2xl font-black text-[#1A1A1A] mb-2">Acesso Restrito à Comissão</h2>
         <p className="text-sm text-slate-600 mb-6">
-          Esta área é exclusiva para a Comissão Organizadora do Festival Sesc. Faça login como
-          administrador.
+          Esta área é exclusiva para a Comissão Organizadora do Viva Tec (Senac/Sesc). Faça login
+          como administrador.
         </p>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Top Bar de Controle e Publicação */}
-      <div className="bg-gradient-to-r from-[#1A237E] via-[#283593] to-[#0D47A1] text-white rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-[#FFD600] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+    <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-[#1A1A1A]">
+      {/* Top Bar de Controle e Publicação Viva Tec */}
+      <div className="bg-gradient-to-r from-[#1A1A1A] via-[#2A1525] to-[#E11D74] text-white rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-[#E11D74] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#FFD600] text-[#1A237E]">
-              Painel Geral de Apuração
+            <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#E11D74] text-white">
+              Painel Central • Viva Tec
             </span>
-            <span className="text-xs text-blue-200">Coordenação Sesc</span>
+            <span className="text-xs text-pink-200">Próxima parada: Ensino Médio</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white">
-            Comando Central do Festival
+            Comando Central de Apuração
           </h1>
-          <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
-            Monitore o recebimento de notas da banca, aplique penalidades de tempo excedente e
-            publique a Vitrine de Vencedores para todos os espectadores em tempo real.
+          <p className="text-xs sm:text-sm text-pink-100 max-w-xl">
+            Monitore o recebimento de notas da banca examinadora, aplique penalidades de tempo
+            excedente e publique a Vitrine de Vencedores para todos os espectadores em tempo real.
           </p>
         </div>
 
-        {/* Botão de Ação de Publicação Global (PRD 7 - Controle de Liberação) */}
+        {/* Botão de Ação de Publicação Global (PRD V2 - Controle de Liberação) */}
         <div className="flex flex-wrap items-center gap-3 bg-white/10 p-3 rounded-2xl border border-white/20 backdrop-blur-md">
           <div className="text-right pr-2 hidden sm:block">
-            <span className="text-[10px] text-blue-200 uppercase font-bold block">
+            <span className="text-[10px] text-pink-200 uppercase font-bold block">
               Status da Vitrine
             </span>
             <span
               className={`text-xs font-black uppercase ${
-                settingsStatus === 'published' ? 'text-emerald-400' : 'text-[#FFD600]'
+                settingsStatus === 'published' ? 'text-emerald-400' : 'text-pink-300'
               }`}
             >
               {settingsStatus === 'published' ? '● PUBLICADA AO VIVO' : '○ AGUARDANDO LIBERAÇÃO'}
@@ -371,9 +375,9 @@ export default function AdminPage() {
           {settingsStatus === 'waiting' ? (
             <Button
               onClick={() => setPublishModalOpen(true)}
-              className="h-12 px-6 bg-[#FFD600] hover:bg-[#ffdf33] text-[#1A237E] font-black text-sm rounded-xl shadow-xl flex items-center gap-2 animate-pulse"
+              className="h-12 px-6 bg-[#E11D74] hover:bg-[#BE185D] text-white font-black text-sm rounded-xl shadow-xl flex items-center gap-2 animate-pulse"
             >
-              <Zap className="w-5 h-5 text-[#1A237E]" />
+              <Zap className="w-5 h-5 text-white" />
               <span>PUBLICAR VITRINE AGORA</span>
             </Button>
           ) : (
@@ -396,7 +400,7 @@ export default function AdminPage() {
             Startups Concorrentes
           </span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-black text-[#1A237E]">{startups.length}</span>
+            <span className="text-3xl font-black text-[#1A1A1A]">{startups.length}</span>
             <span className="text-xs text-slate-500 font-medium">equipes</span>
           </div>
         </Card>
@@ -418,10 +422,10 @@ export default function AdminPage() {
             Líder Provisório
           </span>
           <div className="flex items-baseline justify-between mt-2 truncate">
-            <span className="text-xl font-black text-[#1A237E] truncate">
+            <span className="text-xl font-black text-[#E11D74] truncate">
               {ranking[0]?.startup.hero_name || '—'}
             </span>
-            <span className="text-xs font-bold text-amber-600">
+            <span className="text-xs font-bold text-[#E11D74]">
               {ranking[0]?.finalScore.toFixed(2) || '0.00'} pts
             </span>
           </div>
@@ -443,16 +447,28 @@ export default function AdminPage() {
       {/* TABS DO ADMIN: Monitor de Ranking, Gestão de Startups, Avaliações Individuais, Logs de Auditoria */}
       <Tabs defaultValue="monitor" className="w-full space-y-6">
         <TabsList className="bg-slate-200/80 p-1.5 rounded-2xl grid grid-cols-2 sm:grid-cols-4 w-full">
-          <TabsTrigger value="monitor" className="rounded-xl text-xs font-bold py-2.5">
+          <TabsTrigger
+            value="monitor"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
             <Trophy className="w-4 h-4 mr-1.5 inline" /> Monitor & Ranking
           </TabsTrigger>
-          <TabsTrigger value="startups" className="rounded-xl text-xs font-bold py-2.5">
-            <Users className="w-4 h-4 mr-1.5 inline" /> Startups & Capas
+          <TabsTrigger
+            value="startups"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
+            <Users className="w-4 h-4 mr-1.5 inline" /> Startups & Estudantes
           </TabsTrigger>
-          <TabsTrigger value="evaluations" className="rounded-xl text-xs font-bold py-2.5">
+          <TabsTrigger
+            value="evaluations"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
             <FileCheck className="w-4 h-4 mr-1.5 inline" /> Avaliações da Banca
           </TabsTrigger>
-          <TabsTrigger value="audit" className="rounded-xl text-xs font-bold py-2.5">
+          <TabsTrigger
+            value="audit"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
             <History className="w-4 h-4 mr-1.5 inline" /> Auditoria & Logs
           </TabsTrigger>
         </TabsList>
@@ -462,7 +478,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-lg overflow-hidden">
             <div className="p-6 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-black text-[#1A237E]">
+                <h3 className="text-lg font-black text-[#1A1A1A]">
                   Quadro Oficial de Notas e Desempate
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
@@ -474,7 +490,7 @@ export default function AdminPage() {
                 variant="outline"
                 size="sm"
                 onClick={fetchAllAdminData}
-                className="rounded-xl text-xs font-bold h-9"
+                className="rounded-xl text-xs font-bold h-9 border-pink-200 hover:bg-pink-50 text-[#E11D74]"
               >
                 <RefreshCw className="w-3.5 h-3.5 mr-1" /> Atualizar
               </Button>
@@ -486,23 +502,24 @@ export default function AdminPage() {
                   <tr>
                     <th className="py-3.5 px-4 text-center w-16">Rank</th>
                     <th className="py-3.5 px-4">Startup & Herói</th>
+                    <th className="py-3.5 px-4">Estudantes</th>
                     <th className="py-3.5 px-4 text-center">Pilar ESG</th>
                     <th className="py-3.5 px-4 text-center">Banca (Média)</th>
-                    <th className="py-3.5 px-4 text-center">ESG (Desempate 1)</th>
-                    <th className="py-3.5 px-4 text-center">Criat. (Desempate 2)</th>
-                    <th className="py-3.5 px-4 text-center">Penalidade (Tempo)</th>
-                    <th className="py-3.5 px-4 text-right font-black text-[#1A237E]">Nota Final</th>
+                    <th className="py-3.5 px-4 text-center">ESG (1º)</th>
+                    <th className="py-3.5 px-4 text-center">Criat. (2º)</th>
+                    <th className="py-3.5 px-4 text-center">Penalidade</th>
+                    <th className="py-3.5 px-4 text-right font-black text-[#E11D74]">Nota Final</th>
                     <th className="py-3.5 px-4 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {ranking.map((item) => (
-                    <tr key={item.startup.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={item.startup.id} className="hover:bg-pink-50/30 transition-colors">
                       <td className="py-4 px-4 text-center">
                         <span
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-xl font-black text-xs ${
                             item.rank === 1
-                              ? 'bg-[#FFD600] text-[#1A237E]'
+                              ? 'bg-[#E11D74] text-white'
                               : item.rank === 2
                                 ? 'bg-slate-200 text-slate-800'
                                 : item.rank === 3
@@ -515,15 +532,21 @@ export default function AdminPage() {
                       </td>
 
                       <td className="py-4 px-4">
-                        <div className="font-bold text-slate-900">{item.startup.hero_name}</div>
+                        <div className="font-bold text-[#1A1A1A]">{item.startup.hero_name}</div>
                         <span className="text-xs text-slate-500">{item.startup.name}</span>
                         {item.tieBreakerReason && (
                           <div className="mt-1">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-pink-100 text-pink-900 border border-pink-200">
                               ★ {item.tieBreakerReason}
                             </span>
                           </div>
                         )}
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <span className="text-xs text-slate-600 line-clamp-1 max-w-[180px]">
+                          {item.startup.estudantes || '—'}
+                        </span>
                       </td>
 
                       <td className="py-4 px-4 text-center">
@@ -531,7 +554,7 @@ export default function AdminPage() {
                       </td>
 
                       <td className="py-4 px-4 text-center">
-                        <span className="text-xs font-bold text-slate-800">
+                        <span className="text-xs font-bold text-[#1A1A1A]">
                           {item.avgTotalEvaluators.toFixed(2)}
                         </span>
                         <span className="text-[10px] text-slate-400 block">
@@ -546,7 +569,7 @@ export default function AdminPage() {
                       </td>
 
                       <td className="py-4 px-4 text-center">
-                        <span className="text-xs font-bold text-indigo-700">
+                        <span className="text-xs font-bold text-[#E11D74]">
                           {item.avgCriatividade.toFixed(2)}
                         </span>
                       </td>
@@ -572,7 +595,7 @@ export default function AdminPage() {
                       </td>
 
                       <td className="py-4 px-4 text-right">
-                        <span className="text-base font-black text-[#1A237E]">
+                        <span className="text-base font-black text-[#E11D74]">
                           {item.finalScore.toFixed(2)}
                         </span>
                       </td>
@@ -586,7 +609,7 @@ export default function AdminPage() {
                             setPenaltyValue(item.startup.time_penalty || 0)
                             setPenaltyModalOpen(true)
                           }}
-                          className="h-8 text-xs font-bold rounded-lg"
+                          className="h-8 text-xs font-bold rounded-lg hover:border-[#E11D74] hover:text-[#E11D74]"
                         >
                           Penalidade
                         </Button>
@@ -599,19 +622,21 @@ export default function AdminPage() {
           </div>
         </TabsContent>
 
-        {/* TAB 2: GESTÃO DE STARTUPS & CAPAS */}
+        {/* TAB 2: GESTÃO DE STARTUPS, ESTUDANTES & CAPAS */}
         <TabsContent value="startups" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-black text-[#1A237E]">Startups & Temas Cadastrados</h3>
+              <h3 className="text-lg font-black text-[#1A1A1A]">
+                Startups & Estudantes Cadastrados
+              </h3>
               <p className="text-xs text-slate-500">
-                Gerencie as equipes, seus heróis fictícios, pilares ESG e fotos de capa para a
-                Vitrine
+                Gerencie as equipes de alunos do Viva Tec, heróis fictícios, integrantes e fotos de
+                capa para a Vitrine
               </p>
             </div>
             <Button
               onClick={() => handleOpenStartupModal()}
-              className="bg-[#1A237E] hover:bg-[#283593] text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-2"
+              className="bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-2"
             >
               <Plus className="w-4 h-4" /> Nova Startup
             </Button>
@@ -645,13 +670,20 @@ export default function AdminPage() {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         Ordem: #{s.order || 1}
                       </span>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-pink-50 text-[#E11D74] border border-pink-200">
                         {s.esg_pillar}
                       </span>
                     </div>
 
-                    <h4 className="font-black text-[#1A237E] text-lg">{s.hero_name}</h4>
-                    <p className="text-xs font-semibold text-slate-600">{s.name}</p>
+                    <h4 className="font-black text-[#1A1A1A] text-lg">{s.hero_name}</h4>
+                    <p className="text-xs font-bold text-[#E11D74]">{s.name}</p>
+
+                    {s.estudantes && (
+                      <p className="text-[11px] text-slate-600 font-medium bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        👥 <strong>Estudantes:</strong> {s.estudantes}
+                      </p>
+                    )}
+
                     <p className="text-xs text-slate-500 line-clamp-2 italic">{s.synopsis}</p>
                   </div>
 
@@ -683,12 +715,12 @@ export default function AdminPage() {
         <TabsContent value="evaluations" className="space-y-4">
           <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md p-6 space-y-4">
             <div>
-              <h3 className="text-lg font-black text-[#1A237E]">
+              <h3 className="text-lg font-black text-[#1A1A1A]">
                 Pareceres e Notas Individuais por Jurado
               </h3>
               <p className="text-xs text-slate-500">
-                Visualização detalhada das notas individuais da banca. Conforme PRD RNF-03, jurados
-                não veem notas uns dos outros.
+                Visualização detalhada das notas individuais da banca examinadora. Conforme PRD
+                RNF-03, jurados não veem notas uns dos outros.
               </p>
             </div>
 
@@ -714,7 +746,7 @@ export default function AdminPage() {
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <strong className="font-bold text-slate-900 text-sm">
+                        <strong className="font-bold text-[#1A1A1A] text-sm">
                           {heroName} ({startupName})
                         </strong>
                         {ev.is_finalized ? (
@@ -728,7 +760,7 @@ export default function AdminPage() {
                         )}
                       </div>
                       <span className="text-xs text-slate-500 block mt-0.5">
-                        Avaliador: <strong className="text-[#1A237E]">{evaluatorName}</strong>
+                        Avaliador: <strong className="text-[#E11D74]">{evaluatorName}</strong>
                       </span>
                       {ev.feedback && (
                         <p className="text-xs text-slate-600 italic mt-1 bg-white p-2 rounded-lg border border-slate-200 max-w-xl">
@@ -739,7 +771,7 @@ export default function AdminPage() {
 
                     <div className="flex items-center gap-3 self-stretch sm:self-auto justify-between">
                       <div className="text-right">
-                        <span className="text-xl font-black text-[#1A237E]">{totalScore}</span>
+                        <span className="text-xl font-black text-[#E11D74]">{totalScore}</span>
                         <span className="text-xs text-slate-400 block">/ 100</span>
                       </div>
 
@@ -767,7 +799,7 @@ export default function AdminPage() {
         <TabsContent value="audit" className="space-y-4">
           <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md p-6 space-y-4">
             <div>
-              <h3 className="text-lg font-black text-[#1A237E]">
+              <h3 className="text-lg font-black text-[#1A1A1A]">
                 Registro de Auditoria & Trilha de Integridade
               </h3>
               <p className="text-xs text-slate-500">
@@ -781,11 +813,11 @@ export default function AdminPage() {
                 <div key={log.id} className="py-3 flex items-start justify-between gap-3 text-xs">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-[#1A237E] bg-slate-100 px-2 py-0.5 rounded">
+                      <span className="font-black text-[#E11D74] bg-pink-50 px-2 py-0.5 rounded border border-pink-100">
                         {log.action}
                       </span>
                       {log.startup_name && (
-                        <span className="font-bold text-slate-700">[{log.startup_name}]</span>
+                        <span className="font-bold text-slate-800">[{log.startup_name}]</span>
                       )}
                     </div>
                     <p className="text-slate-600 mt-1">{log.details}</p>
@@ -803,21 +835,21 @@ export default function AdminPage() {
         </TabsContent>
       </Tabs>
 
-      {/* MODAL DE CADASTRO/EDIÇÃO DE STARTUP */}
+      {/* MODAL DE CADASTRO/EDIÇÃO DE STARTUP COM ESTUDANTES */}
       <Dialog open={startupModalOpen} onOpenChange={setStartupModalOpen}>
-        <DialogContent className="sm:max-w-[500px] p-6 bg-white rounded-3xl border-2 border-[#1A237E]/20 shadow-2xl">
+        <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto p-6 bg-white rounded-3xl border-2 border-pink-100 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1A237E]">
+            <DialogTitle className="text-xl font-black text-[#1A1A1A]">
               {editingStartup ? 'Editar Startup & Herói' : 'Cadastrar Nova Startup'}
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Insira os dados da startup que se apresentará no Festival Sesc
+              Insira os dados da startup, estudantes e herói para o Festival Viva Tec
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSaveStartup} className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Nome da Startup / Equipe *</label>
+              <label className="text-xs font-bold text-[#1A1A1A]">Nome da Startup / Equipe *</label>
               <Input
                 placeholder="Ex: Eco-Guardians"
                 value={startupName}
@@ -828,7 +860,7 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Nome do Herói Fictício *</label>
+              <label className="text-xs font-bold text-[#1A1A1A]">Nome do Herói Fictício *</label>
               <Input
                 placeholder="Ex: Terra-Man"
                 value={heroName}
@@ -838,9 +870,25 @@ export default function AdminPage() {
               />
             </div>
 
+            {/* Campo Estudantes (PRD V2) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#E11D74]">
+                Estudantes / Integrantes da Equipe
+              </label>
+              <Input
+                placeholder="Ex: Ana Beatriz Lima, Carlos Eduardo Rocha, Larissa Santos..."
+                value={estudantes}
+                onChange={(e) => setEstudantes(e.target.value)}
+                className="h-10 rounded-xl border-pink-200 focus:border-[#E11D74]"
+              />
+              <span className="text-[10px] text-slate-400 block">
+                Nomes que aparecerão no Pódio e na Vitrine de Vencedores
+              </span>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Pilar ESG Principal *</label>
+                <label className="text-xs font-bold text-[#1A1A1A]">Pilar ESG Principal *</label>
                 <Select value={esgPillar} onValueChange={(v: ESGPillar) => setEsgPillar(v)}>
                   <SelectTrigger className="h-10 rounded-xl">
                     <SelectValue />
@@ -854,7 +902,7 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Ordem de Apresentação</label>
+                <label className="text-xs font-bold text-[#1A1A1A]">Ordem de Apresentação</label>
                 <Input
                   type="number"
                   min={1}
@@ -866,7 +914,7 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">
+              <label className="text-xs font-bold text-[#1A1A1A]">
                 Sinopse da Jornada do Herói
               </label>
               <Textarea
@@ -879,8 +927,8 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">
-                Foto de Capa do Herói (Vitrine)
+              <label className="text-xs font-bold text-[#1A1A1A]">
+                Foto de Capa do Herói (Vitrine - RF-05)
               </label>
               <Input
                 type="file"
@@ -890,7 +938,7 @@ export default function AdminPage() {
                     setCoverFile(e.target.files[0])
                   }
                 }}
-                className="h-10 rounded-xl file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#1A237E] file:text-white"
+                className="h-10 rounded-xl file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#E11D74] file:text-white"
               />
             </div>
 
@@ -906,7 +954,7 @@ export default function AdminPage() {
               <Button
                 type="submit"
                 disabled={savingStartup}
-                className="h-10 px-5 bg-[#1A237E] hover:bg-[#283593] text-white font-bold text-xs rounded-xl shadow-md"
+                className="h-10 px-5 bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold text-xs rounded-xl shadow-md"
               >
                 {savingStartup ? 'Salvando...' : 'Salvar Startup'}
               </Button>
@@ -975,24 +1023,24 @@ export default function AdminPage() {
 
       {/* MODAL DE CONFIRMAÇÃO DE PUBLICAÇÃO GLOBAL */}
       <Dialog open={publishModalOpen} onOpenChange={setPublishModalOpen}>
-        <DialogContent className="sm:max-w-[480px] p-6 bg-white rounded-3xl border-4 border-[#FFD600] shadow-2xl text-center">
+        <DialogContent className="sm:max-w-[480px] p-6 bg-white rounded-3xl border-4 border-[#E11D74] shadow-2xl text-center">
           <DialogHeader className="space-y-2">
-            <div className="mx-auto w-16 h-16 rounded-3xl bg-[#FFD600] text-[#1A237E] flex items-center justify-center shadow-lg">
-              <Trophy className="w-8 h-8 text-[#1A237E]" />
+            <div className="mx-auto w-16 h-16 rounded-3xl bg-[#E11D74] text-white flex items-center justify-center shadow-lg">
+              <Trophy className="w-8 h-8 text-white" />
             </div>
-            <DialogTitle className="text-2xl font-black text-[#1A237E]">
+            <DialogTitle className="text-2xl font-black text-[#1A1A1A]">
               Homologar & Publicar Resultados
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-600">
-              Tem certeza que deseja liberar a Vitrine de Vencedores com o Pódio Oficial para toda a
-              comunidade escolar?
+              Tem certeza que deseja liberar a Vitrine de Vencedores com o Pódio Oficial Viva Tec
+              para toda a comunidade escolar?
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-3 text-xs bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-1.5">
+          <div className="py-3 text-xs bg-pink-50/50 rounded-2xl p-4 border border-pink-200 text-left space-y-1.5">
             <div className="flex justify-between">
               <span className="text-slate-500">1º Lugar Homologado:</span>
-              <strong className="text-[#1A237E] font-bold">
+              <strong className="text-[#E11D74] font-bold">
                 {ranking[0]?.startup.hero_name} ({ranking[0]?.finalScore.toFixed(2)} pts)
               </strong>
             </div>
@@ -1013,7 +1061,7 @@ export default function AdminPage() {
             <Button
               onClick={handlePublish}
               disabled={isPublishing}
-              className="w-full sm:w-auto h-11 bg-[#1A237E] hover:bg-[#283593] text-white font-black text-xs rounded-xl shadow-lg flex-1"
+              className="w-full sm:w-auto h-11 bg-[#E11D74] hover:bg-[#BE185D] text-white font-black text-xs rounded-xl shadow-lg flex-1"
             >
               {isPublishing ? 'Publicando...' : 'Confirmar e Abrir Pódio'}
             </Button>

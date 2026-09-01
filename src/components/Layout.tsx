@@ -17,6 +17,7 @@ import {
   Menu,
   X,
 } from 'lucide-react'
+import { VivaTecLogo } from './VivaTecLogo'
 import { useRealtime } from '@/hooks/use-realtime'
 
 export default function Layout() {
@@ -38,44 +39,29 @@ export default function Layout() {
   }, [location.pathname])
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F7FA] text-slate-900 selection:bg-[#FFD600] selection:text-[#1A237E]">
-      {/* Header Institucional Sesc / HeroScore */}
-      <header className="sticky top-0 z-40 bg-[#1A237E] text-white border-b-2 border-[#FFD600] shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC] text-[#1A1A1A] selection:bg-[#E11D74] selection:text-white">
+      {/* Header Institucional Viva Tec */}
+      <header className="sticky top-0 z-40 bg-white text-[#1A1A1A] border-b-2 border-pink-100 shadow-xs backdrop-blur-md bg-white/95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           {/* Logo / Nome do Evento */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-[#FFD600] text-[#1A237E] flex items-center justify-center font-black text-xl shadow-md group-hover:scale-105 transition-transform">
-              <Trophy className="w-5 h-5 text-[#1A237E]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-1">
-                  HERO<span className="text-[#FFD600]">SCORE</span>
-                </span>
-                <span className="hidden md:inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FFD600]/20 text-[#FFD600] border border-[#FFD600]/40 uppercase tracking-widest">
-                  SESC v1.0
-                </span>
-              </div>
-              <p className="text-[10px] text-blue-200 hidden sm:block font-medium truncate max-w-[320px]">
-                Escola Educar Sesc Monsenhor Jonas Abib
-              </p>
-            </div>
+            <VivaTecLogo iconSize="md" showTagline={true} inverted={false} />
           </Link>
 
           {/* Navegação Desktop */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+          <nav className="hidden md:flex items-center gap-1.5 lg:gap-2">
             <Link to="/">
               <Button
-                variant={location.pathname === '/' ? 'secondary' : 'ghost'}
+                variant={location.pathname === '/' ? 'default' : 'ghost'}
                 size="sm"
-                className={`font-semibold rounded-xl text-xs h-9 ${
+                className={`font-bold rounded-xl text-xs h-9.5 transition-all ${
                   location.pathname === '/'
-                    ? 'bg-[#FFD600] text-[#1A237E] hover:bg-[#ffe033]'
-                    : 'text-white hover:bg-white/10'
+                    ? 'bg-[#E11D74] text-white hover:bg-[#BE185D] shadow-sm'
+                    : 'text-[#1A1A1A] hover:bg-pink-50 hover:text-[#E11D74]'
                 }`}
               >
                 <Trophy className="w-3.5 h-3.5 mr-1.5" />
-                Vitrine Pública
+                Vitrine de Vencedores
               </Button>
             </Link>
 
@@ -83,12 +69,12 @@ export default function Layout() {
             {(isEvaluator || isAdmin) && (
               <Link to="/avaliar">
                 <Button
-                  variant={location.pathname.startsWith('/avaliar') ? 'secondary' : 'ghost'}
+                  variant={location.pathname.startsWith('/avaliar') ? 'default' : 'ghost'}
                   size="sm"
-                  className={`font-semibold rounded-xl text-xs h-9 ${
+                  className={`font-bold rounded-xl text-xs h-9.5 transition-all ${
                     location.pathname.startsWith('/avaliar')
-                      ? 'bg-[#FFD600] text-[#1A237E] hover:bg-[#ffe033]'
-                      : 'text-white hover:bg-white/10'
+                      ? 'bg-[#E11D74] text-white hover:bg-[#BE185D] shadow-sm'
+                      : 'text-[#1A1A1A] hover:bg-pink-50 hover:text-[#E11D74]'
                   }`}
                 >
                   <ClipboardCheck className="w-3.5 h-3.5 mr-1.5" />
@@ -101,16 +87,16 @@ export default function Layout() {
             {isAdmin && (
               <Link to="/admin">
                 <Button
-                  variant={location.pathname.startsWith('/admin') ? 'secondary' : 'ghost'}
+                  variant={location.pathname.startsWith('/admin') ? 'default' : 'ghost'}
                   size="sm"
-                  className={`font-semibold rounded-xl text-xs h-9 ${
+                  className={`font-bold rounded-xl text-xs h-9.5 transition-all ${
                     location.pathname.startsWith('/admin')
-                      ? 'bg-[#FFD600] text-[#1A237E] hover:bg-[#ffe033]'
-                      : 'text-white hover:bg-white/10'
+                      ? 'bg-[#E11D74] text-white hover:bg-[#BE185D] shadow-sm'
+                      : 'text-[#1A1A1A] hover:bg-pink-50 hover:text-[#E11D74]'
                   }`}
                 >
                   <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
-                  Painel da Comissão
+                  Comissão (Admin)
                 </Button>
               </Link>
             )}
@@ -120,35 +106,35 @@ export default function Layout() {
           <div className="flex items-center gap-3">
             {/* Status Realtime */}
             <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/20 border border-white/10 text-[11px] font-medium"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pink-50 border border-pink-200 text-[11px] font-medium text-slate-700"
               title={
                 isConnected ? 'Sincronização em tempo real ativa' : 'Conectando ao servidor...'
               }
             >
               <span
                 className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
                 }`}
               />
-              <span className="hidden lg:inline text-slate-200">
+              <span className="hidden lg:inline text-slate-700 font-semibold">
                 {isConnected ? 'Tempo Real' : 'Conectando'}
               </span>
-              <Wifi className="w-3 h-3 text-slate-300" />
+              <Wifi className="w-3 h-3 text-[#E11D74]" />
             </div>
 
             {/* Usuário / Login */}
             {isAuthenticated && user ? (
               <div className="flex items-center gap-2">
                 <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-bold text-white leading-tight">
+                  <span className="text-xs font-bold text-[#1A1A1A] leading-tight">
                     {user.name.split(' ')[0]}
                   </span>
-                  <span className="text-[10px] text-[#FFD600] font-medium">
-                    {user.role === 'admin' ? 'Comissão' : 'Banca'}
+                  <span className="text-[10px] text-[#E11D74] font-bold">
+                    {user.role === 'admin' ? 'Comissão Senac/Sesc' : 'Banca Avaliadora'}
                   </span>
                 </div>
 
-                <div className="w-8 h-8 rounded-full bg-[#FFD600] text-[#1A237E] flex items-center justify-center font-bold text-xs shadow-inner">
+                <div className="w-8.5 h-8.5 rounded-full bg-[#E11D74] text-white flex items-center justify-center font-black text-xs shadow-sm">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
 
@@ -156,7 +142,7 @@ export default function Layout() {
                   variant="ghost"
                   size="icon"
                   onClick={logout}
-                  className="w-8 h-8 text-white/80 hover:text-white hover:bg-white/10 rounded-lg"
+                  className="w-8.5 h-8.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
                   title="Sair do sistema"
                 >
                   <LogOut className="w-4 h-4" />
@@ -166,7 +152,7 @@ export default function Layout() {
               <Button
                 onClick={() => setLoginModalOpen(true)}
                 size="sm"
-                className="bg-[#FFD600] hover:bg-[#ffdf33] text-[#1A237E] font-bold text-xs h-9 px-3.5 rounded-xl shadow-md flex items-center gap-1.5"
+                className="bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold text-xs h-9.5 px-4 rounded-xl shadow-md flex items-center gap-1.5 transition-all hover:scale-[1.02]"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span>Acesso Banca / Admin</span>
@@ -176,34 +162,40 @@ export default function Layout() {
             {/* Botão Menu Mobile */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg"
+              className="md:hidden p-2 text-slate-800 hover:bg-slate-100 rounded-lg"
               aria-label="Menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 text-[#E11D74]" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Menu Mobile Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#151c68] border-t border-white/10 px-4 py-3 space-y-2 animate-in slide-in-from-top-2">
+          <div className="md:hidden bg-white border-t border-slate-200 px-4 py-3 space-y-2 animate-in slide-in-from-top-2 shadow-xl">
             <Link
               to="/"
-              className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-semibold ${
-                location.pathname === '/' ? 'bg-[#FFD600] text-[#1A237E]' : 'text-white'
+              className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
+                location.pathname === '/'
+                  ? 'bg-[#E11D74] text-white'
+                  : 'text-[#1A1A1A] hover:bg-pink-50'
               }`}
             >
               <Trophy className="w-4 h-4" />
-              Vitrine Pública de Vencedores
+              Vitrine de Vencedores
             </Link>
 
             {(isEvaluator || isAdmin) && (
               <Link
                 to="/avaliar"
-                className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-semibold ${
+                className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
                   location.pathname.startsWith('/avaliar')
-                    ? 'bg-[#FFD600] text-[#1A237E]'
-                    : 'text-white'
+                    ? 'bg-[#E11D74] text-white'
+                    : 'text-[#1A1A1A] hover:bg-pink-50'
                 }`}
               >
                 <ClipboardCheck className="w-4 h-4" />
@@ -214,10 +206,10 @@ export default function Layout() {
             {isAdmin && (
               <Link
                 to="/admin"
-                className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-semibold ${
+                className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
                   location.pathname.startsWith('/admin')
-                    ? 'bg-[#FFD600] text-[#1A237E]'
-                    : 'text-white'
+                    ? 'bg-[#E11D74] text-white'
+                    : 'text-[#1A1A1A] hover:bg-pink-50'
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
@@ -231,7 +223,7 @@ export default function Layout() {
                   setMobileMenuOpen(false)
                   setLoginModalOpen(true)
                 }}
-                className="w-full bg-[#FFD600] text-[#1A237E] font-bold mt-2"
+                className="w-full bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold mt-2 rounded-xl"
               >
                 <LogIn className="w-4 h-4 mr-2" />
                 Entrar com Código ou Senha
@@ -250,8 +242,8 @@ export default function Layout() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-200 px-3 py-2 flex items-center justify-around shadow-2xl">
         <Link
           to="/"
-          className={`flex flex-col items-center gap-1 text-[11px] font-semibold py-1 px-3 rounded-lg ${
-            location.pathname === '/' ? 'text-[#1A237E]' : 'text-slate-500'
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${
+            location.pathname === '/' ? 'text-[#E11D74]' : 'text-slate-500'
           }`}
         >
           <Trophy className="w-5 h-5" />
@@ -261,8 +253,8 @@ export default function Layout() {
         {(isEvaluator || isAdmin) && (
           <Link
             to="/avaliar"
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold py-1 px-3 rounded-lg ${
-              location.pathname.startsWith('/avaliar') ? 'text-[#1A237E]' : 'text-slate-500'
+            className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${
+              location.pathname.startsWith('/avaliar') ? 'text-[#E11D74]' : 'text-slate-500'
             }`}
           >
             <ClipboardCheck className="w-5 h-5" />
@@ -273,8 +265,8 @@ export default function Layout() {
         {isAdmin && (
           <Link
             to="/admin"
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold py-1 px-3 rounded-lg ${
-              location.pathname.startsWith('/admin') ? 'text-[#1A237E]' : 'text-slate-500'
+            className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${
+              location.pathname.startsWith('/admin') ? 'text-[#E11D74]' : 'text-slate-500'
             }`}
           >
             <LayoutDashboard className="w-5 h-5" />
@@ -285,7 +277,7 @@ export default function Layout() {
         {!isAuthenticated && (
           <button
             onClick={() => setLoginModalOpen(true)}
-            className="flex flex-col items-center gap-1 text-[11px] font-semibold py-1 px-3 rounded-lg text-slate-500 hover:text-[#1A237E]"
+            className="flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg text-slate-500 hover:text-[#E11D74]"
           >
             <LogIn className="w-5 h-5" />
             <span>Entrar</span>
@@ -293,27 +285,25 @@ export default function Layout() {
         )}
       </div>
 
-      {/* Footer Institucional */}
-      <footer className="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 pb-20 md:pb-8 mt-auto">
+      {/* Footer Institucional Viva Tec */}
+      <footer className="bg-white text-[#1A1A1A] text-xs py-8 border-t border-slate-200 pb-20 md:pb-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#1A237E] flex items-center justify-center text-[#FFD600] font-bold">
-              <Shield className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="font-bold text-white">Escola Educar Sesc Monsenhor Jonas Abib</p>
-              <p className="text-[11px] text-slate-400">
-                Festival de Apresentação Artística de Heróis Fictícios • HeroScore System
+            <VivaTecLogo iconSize="sm" showTagline={false} />
+            <div className="border-l border-slate-200 pl-3">
+              <p className="font-bold text-[#1A1A1A]">
+                Parceria Senac & Sesc — Escola Educar Sesc Monsenhor Jonas Abib
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Festival de Apresentação Artística de Heróis Fictícios • Viva Tec V2
               </p>
             </div>
           </div>
           <div className="text-center sm:text-right text-[11px] text-slate-500">
-            <p>
-              Critérios oficiais: ESG • Criatividade • Engajamento • Figurino • Narrativa • Briefing
-              • Tempo
-            </p>
-            <p className="mt-1 font-mono text-slate-600">
-              Ambiente Seguro & Tabulação Criptografada
+            <p className="font-semibold text-[#E11D74]">Próxima parada: Ensino Médio</p>
+            <p className="mt-0.5 font-medium text-slate-600">
+              Critérios: ESG • Criatividade • Engajamento • Figurino • Narrativa • Briefing • Gestão
+              de Tempo
             </p>
           </div>
         </div>

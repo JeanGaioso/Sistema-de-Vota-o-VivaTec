@@ -4,6 +4,7 @@ export interface Startup {
   id: string
   name: string
   hero_name: string
+  estudantes?: string
   esg_pillar: ESGPillar
   synopsis: string
   cover_image?: string
@@ -105,7 +106,7 @@ export const EVALUATION_CRITERIA: CriteriaConfig[] = [
     key: 'score_briefing',
     label: 'Briefing & Alinhamento',
     max: 10,
-    description: 'Conformidade com os temas e orientações do Festival Sesc.',
+    description: 'Conformidade com os temas e orientações do Festival Viva Tec.',
   },
   {
     key: 'score_gestao_tempo',

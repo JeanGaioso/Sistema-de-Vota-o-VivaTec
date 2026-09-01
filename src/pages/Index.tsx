@@ -100,32 +100,33 @@ export default function Index() {
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 min-h-[60vh]">
-        <RefreshCw className="w-10 h-10 text-[#1A237E] animate-spin mb-4" />
-        <p className="text-sm font-bold text-[#1A237E]">Carregando Vitrine Oficial Sesc...</p>
+        <RefreshCw className="w-10 h-10 text-[#E11D74] animate-spin mb-4" />
+        <p className="text-sm font-bold text-[#1A1A1A]">Carregando Vitrine Oficial Viva Tec...</p>
       </div>
     )
   }
 
   return (
     <div className="flex-1 flex flex-col pb-16">
-      {/* Banner Principal do Festival */}
-      <section className="relative bg-gradient-to-br from-[#1A237E] via-[#283593] to-[#0D47A1] text-white py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-b-4 border-[#FFD600] overflow-hidden">
-        {/* Elementos decorativos hero */}
+      {/* Banner Principal do Festival Viva Tec */}
+      <section className="relative bg-gradient-to-br from-[#1A1A1A] via-[#2A1525] to-[#E11D74] text-white py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-b-4 border-[#E11D74] overflow-hidden">
+        {/* Elementos decorativos */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#FFD600]/20 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-blue-400/20 blur-3xl" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#E11D74]/30 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-pink-400/20 blur-3xl" />
 
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD600]/20 border border-[#FFD600]/40 text-[#FFD600] text-xs font-black tracking-wider uppercase">
-              <Sparkles className="w-3.5 h-3.5" /> Festival Oficial de Heróis Fictícios
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#E11D74]/30 border border-[#E11D74]/60 text-pink-200 text-xs font-black tracking-wider uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-[#E11D74]" /> Festival de Heróis Fictícios •
+              Senac & Sesc
             </div>
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-              Vitrine de <span className="text-[#FFD600] drop-shadow-md">Vencedores</span>
+              Vitrine de <span className="text-[#E11D74] drop-shadow-md">Vencedores</span>
             </h1>
-            <p className="text-sm sm:text-base text-blue-100 max-w-2xl font-medium">
-              Escola Educar Sesc Monsenhor Jonas Abib • Apresentações Artísticas, Inovação e Impacto
-              ESG
+            <p className="text-sm sm:text-base text-pink-100 max-w-2xl font-medium">
+              Viva Tec — Apresentações Artísticas, Inovação e Impacto ESG •{' '}
+              <strong className="text-white">Próxima parada: Ensino Médio</strong>
             </p>
           </div>
 
@@ -133,55 +134,60 @@ export default function Index() {
             <Button
               onClick={() => setQrModalOpen(true)}
               variant="outline"
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-2xl h-11 px-4 font-bold text-xs flex items-center gap-2 shadow-md backdrop-blur-sm"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/30 rounded-2xl h-11 px-4 font-bold text-xs flex items-center gap-2 shadow-md backdrop-blur-sm"
             >
-              <QrCode className="w-4 h-4 text-[#FFD600]" />
+              <QrCode className="w-4 h-4 text-pink-300" />
               <span>QR Code para Comunidade</span>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* ESTADO 1: AGUARDANDO RESULTADOS (PRD 7 - Vitrine fica em "Aguardando" até liberação admin) */}
+      {/* ESTADO 1: AGUARDANDO RESULTADOS (PRD V2 - Vitrine fica em "Aguardando" até liberação admin) */}
       {eventStatus === 'waiting' ? (
         <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-8 flex-1 flex flex-col justify-center">
-          <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-[#1A237E] flex items-center justify-center text-[#FFD600] shadow-2xl border-4 border-[#FFD600] animate-bounce">
-            <Radio className="w-12 h-12 text-[#FFD600] animate-pulse" />
+          <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-[#1A1A1A] flex items-center justify-center text-[#E11D74] shadow-2xl border-4 border-[#E11D74] animate-bounce">
+            <Radio className="w-12 h-12 text-[#E11D74] animate-pulse" />
           </div>
 
           <div className="space-y-3">
-            <span className="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-100 text-amber-900 border border-amber-300 inline-block">
-              Apuração Oficial em Andamento
+            <span className="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-pink-100 text-[#E11D74] border border-pink-200 inline-block">
+              Apuração Oficial em Andamento • Viva Tec
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#1A237E] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-[#1A1A1A] tracking-tight">
               Aguardando Publicação da Banca
             </h2>
             <p className="text-sm sm:text-base text-slate-600 max-w-lg mx-auto leading-relaxed">
-              Os avaliadores da banca examinadora e a comissão organizadora do Sesc estão
-              finalizando as notas e aplicando critérios de desempate. O pódio será transmitido aqui
-              instantaneamente!
+              Os jurados da banca examinadora e a comissão Senac/Sesc estão consolidando as notas
+              dos 7 critérios e aplicando eventuais penalidades. O pódio será liberado ao vivo aqui
+              nos telões!
             </p>
           </div>
 
-          {/* Cards das Startups em Apresentação */}
+          {/* Cards das Startups em Apresentação com Estudantes */}
           <div className="pt-6 border-t border-slate-200">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
-              Startups & Heróis Concorrentes da Noite ({startups.length})
+              Startups & Heróis Fictícios da Noite ({startups.length})
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
               {startups.map((s) => (
                 <div
                   key={s.id}
-                  className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm text-left hover:border-[#1A237E]/30 transition-all"
+                  className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs text-left hover:border-[#E11D74]/40 transition-all space-y-1.5"
                 >
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Herói
+                      Herói Fictício
                     </span>
                     {getPillarBadge(s.esg_pillar)}
                   </div>
-                  <h4 className="font-black text-[#1A237E] text-base truncate">{s.hero_name}</h4>
-                  <p className="text-xs text-slate-600 font-medium truncate">{s.name}</p>
+                  <h4 className="font-black text-[#1A1A1A] text-base truncate">{s.hero_name}</h4>
+                  <p className="text-xs text-[#E11D74] font-bold truncate">{s.name}</p>
+                  {s.estudantes && (
+                    <p className="text-[11px] text-slate-500 font-medium line-clamp-1">
+                      👥 {s.estudantes}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -208,15 +214,19 @@ export default function Index() {
             </span>
           </div>
 
-          {/* PÓDIO HEROICO (1º, 2º e 3º Lugares com animação escalonada 500ms) */}
+          {/* PÓDIO HEROICO VIVA TEC (1º, 2º e 3º Lugares com animação e rosa vibrante) */}
           {ranking.length > 0 && (
             <section className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl sm:text-3xl font-black text-[#1A237E] tracking-tight">
-                  Pódio dos Campeões
+              <div className="text-center space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#E11D74]">
+                  Próxima parada: Ensino Médio
+                </span>
+                <h2 className="text-2xl sm:text-4xl font-black text-[#1A1A1A] tracking-tight">
+                  Pódio dos Campeões Viva Tec
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  Os maiores heróis fictícios e propostas de inovação do Festival Sesc
+                <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-xl mx-auto">
+                  Destaque para as startups, estudantes protagonistas e os heróis fictícios mais bem
+                  avaliados pela banca
                 </p>
               </div>
 
@@ -226,11 +236,11 @@ export default function Index() {
                   <div className="order-2 md:order-1 podium-2">
                     <Card
                       onClick={() => setSelectedRankResult(top2)}
-                      className="cursor-pointer group relative overflow-hidden bg-white border-2 border-slate-300 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-1"
+                      className="cursor-pointer group relative overflow-hidden bg-white border-2 border-slate-300 rounded-3xl p-6 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1"
                     >
                       <div className="absolute top-0 right-0 left-0 h-3 bg-slate-300" />
                       <div className="flex items-center justify-between mb-3">
-                        <span className="w-10 h-10 rounded-2xl bg-slate-200 text-slate-700 font-black text-lg flex items-center justify-center border border-slate-300 shadow-sm">
+                        <span className="w-10 h-10 rounded-2xl bg-slate-200 text-slate-800 font-black text-lg flex items-center justify-center border border-slate-300 shadow-sm">
                           2º
                         </span>
                         {getPillarBadge(top2.startup.esg_pillar)}
@@ -253,17 +263,22 @@ export default function Index() {
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">
                         Herói Fictício
                       </span>
-                      <h3 className="text-xl font-black text-[#1A237E] truncate">
+                      <h3 className="text-xl font-black text-[#1A1A1A] group-hover:text-[#E11D74] transition-colors truncate">
                         {top2.startup.hero_name}
                       </h3>
-                      <p className="text-xs font-semibold text-slate-600 mb-4">
-                        {top2.startup.name}
-                      </p>
+                      <p className="text-xs font-bold text-slate-700">{top2.startup.name}</p>
+
+                      {/* Estudantes */}
+                      {top2.startup.estudantes && (
+                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-1 mb-3 font-medium">
+                          👥 {top2.startup.estudantes}
+                        </p>
+                      )}
 
                       <div className="pt-3 border-t border-slate-100 flex items-baseline justify-between">
                         <span className="text-xs text-slate-500 font-medium">Média Final:</span>
                         <div className="text-right">
-                          <span className="text-2xl font-black text-[#1A237E]">
+                          <span className="text-2xl font-black text-[#1A1A1A]">
                             {top2.finalScore.toFixed(2)}
                           </span>
                           <span className="text-[10px] text-slate-400 block">/ 100</span>
@@ -271,7 +286,7 @@ export default function Index() {
                       </div>
 
                       {top2.tieBreakerReason && (
-                        <div className="mt-2 text-[10px] font-bold text-amber-700 bg-amber-50 p-1.5 rounded-lg border border-amber-200 text-center">
+                        <div className="mt-2 text-[10px] font-bold text-pink-700 bg-pink-50 p-1.5 rounded-lg border border-pink-200 text-center">
                           ★ {top2.tieBreakerReason}
                         </div>
                       )}
@@ -279,21 +294,21 @@ export default function Index() {
                   </div>
                 )}
 
-                {/* 1º LUGAR (Ouro - Destaque Principal) */}
+                {/* 1º LUGAR (Ouro / Destaque Magenta Viva Tec) */}
                 {top1 && (
                   <div className="order-1 md:order-2 podium-1">
                     <Card
                       onClick={() => setSelectedRankResult(top1)}
-                      className="cursor-pointer group relative overflow-hidden bg-gradient-to-b from-amber-50 to-white border-4 border-[#FFD600] rounded-3xl p-7 shadow-2xl hover:shadow-[0_20px_50px_rgba(255,214,0,0.3)] transition-all hover:-translate-y-2 glow-gold"
+                      className="cursor-pointer group relative overflow-hidden bg-gradient-to-b from-pink-50/60 via-white to-white border-4 border-[#E11D74] rounded-3xl p-7 shadow-2xl hover:shadow-[0_20px_50px_rgba(225,29,116,0.3)] transition-all hover:-translate-y-2 glow-magenta"
                     >
-                      <div className="absolute top-0 right-0 left-0 h-4 bg-[#FFD600]" />
+                      <div className="absolute top-0 right-0 left-0 h-4 bg-[#E11D74]" />
                       <div className="flex items-center justify-between mb-3">
-                        <span className="w-14 h-14 rounded-2xl bg-[#FFD600] text-[#1A237E] font-black text-2xl flex items-center justify-center border-2 border-amber-300 shadow-md">
-                          <Crown className="w-8 h-8 text-[#1A237E]" />
+                        <span className="w-14 h-14 rounded-2xl bg-[#E11D74] text-white font-black text-2xl flex items-center justify-center border-2 border-pink-300 shadow-md">
+                          <Crown className="w-8 h-8 text-white" />
                         </span>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FFD600] text-[#1A237E]">
-                            1º Campeão Geral
+                          <span className="px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#E11D74] text-white shadow-xs">
+                            1º Grande Campeão
                           </span>
                           {getPillarBadge(top1.startup.esg_pillar)}
                         </div>
@@ -301,7 +316,7 @@ export default function Index() {
 
                       {/* Capa */}
                       {top1.startup.cover_image && (
-                        <div className="h-36 w-full rounded-2xl overflow-hidden mb-3 bg-amber-100 shadow-inner">
+                        <div className="h-36 w-full rounded-2xl overflow-hidden mb-3 bg-pink-50 shadow-inner">
                           <img
                             src={
                               getFileUrl('startups', top1.startup.id, top1.startup.cover_image) ||
@@ -313,22 +328,34 @@ export default function Index() {
                         </div>
                       )}
 
-                      <span className="text-xs font-extrabold text-amber-600 uppercase tracking-widest block">
-                        Grande Herói Vencedor
+                      <span className="text-xs font-extrabold text-[#E11D74] uppercase tracking-widest block">
+                        Herói Fictício Vencedor
                       </span>
-                      <h3 className="text-2xl sm:text-3xl font-black text-[#1A237E] tracking-tight truncate">
+                      <h3 className="text-2xl sm:text-3xl font-black text-[#1A1A1A] tracking-tight truncate">
                         {top1.startup.hero_name}
                       </h3>
-                      <p className="text-sm font-bold text-slate-700 mb-4">{top1.startup.name}</p>
+                      <p className="text-sm font-bold text-slate-800">{top1.startup.name}</p>
 
-                      <p className="text-xs text-slate-600 line-clamp-2 mb-4 font-medium italic">
+                      {/* Estudantes do 1º Lugar */}
+                      {top1.startup.estudantes && (
+                        <div className="mt-1 p-2 bg-pink-50/80 rounded-xl border border-pink-100">
+                          <span className="text-[10px] font-bold text-[#E11D74] uppercase block">
+                            Estudantes Protagonistas:
+                          </span>
+                          <p className="text-xs font-semibold text-slate-800 leading-snug line-clamp-2">
+                            {top1.startup.estudantes}
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-slate-600 line-clamp-2 my-3 font-medium italic">
                         "{top1.startup.synopsis}"
                       </p>
 
-                      <div className="pt-3 border-t-2 border-amber-200 flex items-baseline justify-between bg-white/80 p-3 rounded-2xl">
-                        <span className="text-xs font-bold text-[#1A237E]">Nota Final Campeã:</span>
+                      <div className="pt-3 border-t-2 border-pink-200 flex items-baseline justify-between bg-pink-50/40 p-3 rounded-2xl">
+                        <span className="text-xs font-bold text-[#1A1A1A]">Nota Final Campeã:</span>
                         <div className="text-right">
-                          <span className="text-3xl font-black text-[#1A237E]">
+                          <span className="text-3xl font-black text-[#E11D74]">
                             {top1.finalScore.toFixed(2)}
                           </span>
                           <span className="text-[11px] text-slate-400 block font-bold">pontos</span>
@@ -336,7 +363,7 @@ export default function Index() {
                       </div>
 
                       {top1.tieBreakerReason && (
-                        <div className="mt-3 text-xs font-bold text-amber-800 bg-amber-100 p-2 rounded-xl border border-amber-300 text-center">
+                        <div className="mt-3 text-xs font-bold text-[#E11D74] bg-pink-100 p-2 rounded-xl border border-pink-200 text-center">
                           ★ {top1.tieBreakerReason}
                         </div>
                       )}
@@ -349,7 +376,7 @@ export default function Index() {
                   <div className="order-3 md:order-3 podium-3">
                     <Card
                       onClick={() => setSelectedRankResult(top3)}
-                      className="cursor-pointer group relative overflow-hidden bg-white border-2 border-amber-600/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-1"
+                      className="cursor-pointer group relative overflow-hidden bg-white border-2 border-amber-600/30 rounded-3xl p-6 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1"
                     >
                       <div className="absolute top-0 right-0 left-0 h-3 bg-amber-700" />
                       <div className="flex items-center justify-between mb-3">
@@ -376,17 +403,22 @@ export default function Index() {
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">
                         Herói Fictício
                       </span>
-                      <h3 className="text-xl font-black text-[#1A237E] truncate">
+                      <h3 className="text-xl font-black text-[#1A1A1A] group-hover:text-[#E11D74] transition-colors truncate">
                         {top3.startup.hero_name}
                       </h3>
-                      <p className="text-xs font-semibold text-slate-600 mb-4">
-                        {top3.startup.name}
-                      </p>
+                      <p className="text-xs font-bold text-slate-700">{top3.startup.name}</p>
+
+                      {/* Estudantes */}
+                      {top3.startup.estudantes && (
+                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-1 mb-3 font-medium">
+                          👥 {top3.startup.estudantes}
+                        </p>
+                      )}
 
                       <div className="pt-3 border-t border-slate-100 flex items-baseline justify-between">
                         <span className="text-xs text-slate-500 font-medium">Média Final:</span>
                         <div className="text-right">
-                          <span className="text-2xl font-black text-[#1A237E]">
+                          <span className="text-2xl font-black text-[#1A1A1A]">
                             {top3.finalScore.toFixed(2)}
                           </span>
                           <span className="text-[10px] text-slate-400 block">/ 100</span>
@@ -394,7 +426,7 @@ export default function Index() {
                       </div>
 
                       {top3.tieBreakerReason && (
-                        <div className="mt-2 text-[10px] font-bold text-amber-700 bg-amber-50 p-1.5 rounded-lg border border-amber-200 text-center">
+                        <div className="mt-2 text-[10px] font-bold text-pink-700 bg-pink-50 p-1.5 rounded-lg border border-pink-200 text-center">
                           ★ {top3.tieBreakerReason}
                         </div>
                       )}
@@ -409,13 +441,13 @@ export default function Index() {
           <section className="bg-white rounded-3xl border-2 border-slate-200 shadow-xl overflow-hidden">
             <div className="p-6 bg-slate-50/80 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-black text-[#1A237E] flex items-center gap-2">
-                  <Award className="w-5 h-5 text-[#FFD600]" />
+                <h3 className="text-lg font-black text-[#1A1A1A] flex items-center gap-2">
+                  <Award className="w-5 h-5 text-[#E11D74]" />
                   Classificação Geral de Todas as Startups
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  Clique em qualquer startup para visualizar detalhamento das notas, pilar ESG e
-                  sinopse
+                  Clique em qualquer startup para visualizar estudantes, pilar ESG, sinopse e
+                  detalhes dos pareceres
                 </p>
               </div>
               <span className="text-xs font-bold text-slate-500">
@@ -429,11 +461,12 @@ export default function Index() {
                   <tr>
                     <th className="py-3.5 px-4 text-center w-16">Posição</th>
                     <th className="py-3.5 px-4">Startup & Herói</th>
+                    <th className="py-3.5 px-4">Estudantes</th>
                     <th className="py-3.5 px-4">Pilar ESG</th>
                     <th className="py-3.5 px-4 text-center hidden md:table-cell">Avaliadores</th>
                     <th className="py-3.5 px-4 text-center hidden lg:table-cell">ESG / Criat.</th>
                     <th className="py-3.5 px-4 text-center hidden sm:table-cell">Penalidades</th>
-                    <th className="py-3.5 px-4 text-right font-black text-[#1A237E]">Nota Final</th>
+                    <th className="py-3.5 px-4 text-right font-black text-[#1A1A1A]">Nota Final</th>
                     <th className="py-3.5 px-4 text-center w-12"></th>
                   </tr>
                 </thead>
@@ -442,14 +475,14 @@ export default function Index() {
                     <tr
                       key={item.startup.id}
                       onClick={() => setSelectedRankResult(item)}
-                      className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
+                      className="hover:bg-pink-50/50 cursor-pointer transition-colors group"
                     >
                       {/* Posição */}
                       <td className="py-4 px-4 text-center">
                         <span
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-xl font-black text-xs ${
                             item.rank === 1
-                              ? 'bg-[#FFD600] text-[#1A237E] font-black'
+                              ? 'bg-[#E11D74] text-white font-black'
                               : item.rank === 2
                                 ? 'bg-slate-200 text-slate-700'
                                 : item.rank === 3
@@ -464,26 +497,36 @@ export default function Index() {
                       {/* Startup & Herói */}
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-[#1A237E]/10 text-[#1A237E] flex items-center justify-center font-bold text-xs flex-shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-pink-100 text-[#E11D74] flex items-center justify-center font-black text-xs flex-shrink-0">
                             {item.startup.hero_name.charAt(0)}
                           </div>
                           <div>
-                            <div className="font-bold text-slate-900 text-sm group-hover:text-[#1A237E] flex items-center gap-2">
+                            <div className="font-bold text-[#1A1A1A] text-sm group-hover:text-[#E11D74] flex items-center gap-2">
                               <span>{item.startup.hero_name}</span>
                               {item.tieBreakerReason && (
                                 <Badge
                                   variant="secondary"
-                                  className="text-[9px] px-1.5 py-0 bg-amber-100 text-amber-900 border-amber-300"
+                                  className="text-[9px] px-1.5 py-0 bg-pink-100 text-pink-900 border-pink-200"
                                 >
                                   Desempate: {item.tieBreakerReason}
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-slate-500 font-medium">
+                            <span className="text-xs text-slate-500 font-semibold">
                               {item.startup.name}
                             </span>
                           </div>
                         </div>
+                      </td>
+
+                      {/* Estudantes */}
+                      <td className="py-4 px-4">
+                        <span
+                          className="text-xs text-slate-600 line-clamp-1 max-w-[200px] font-medium"
+                          title={item.startup.estudantes}
+                        >
+                          {item.startup.estudantes || '—'}
+                        </span>
                       </td>
 
                       {/* ESG */}
@@ -499,7 +542,7 @@ export default function Index() {
                       {/* Destaque ESG / Criatividade */}
                       <td className="py-4 px-4 text-center hidden lg:table-cell text-xs font-medium text-slate-600">
                         <span className="text-emerald-700 font-bold">{item.avgESG}</span> /{' '}
-                        <span className="text-indigo-700 font-bold">{item.avgCriatividade}</span>
+                        <span className="text-[#E11D74] font-bold">{item.avgCriatividade}</span>
                       </td>
 
                       {/* Penalidades */}
@@ -514,13 +557,13 @@ export default function Index() {
                       </td>
 
                       {/* Nota Final */}
-                      <td className="py-4 px-4 text-right font-black text-base text-[#1A237E]">
+                      <td className="py-4 px-4 text-right font-black text-base text-[#E11D74]">
                         {item.finalScore.toFixed(2)}
                       </td>
 
                       {/* Ação */}
                       <td className="py-4 px-4 text-center">
-                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#1A237E] transition-transform group-hover:translate-x-1" />
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#E11D74] transition-transform group-hover:translate-x-1" />
                       </td>
                     </tr>
                   ))}

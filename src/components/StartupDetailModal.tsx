@@ -50,7 +50,7 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
       case 'Governança':
         return <Building className="w-4 h-4 text-amber-600" />
       default:
-        return <Sparkles className="w-4 h-4 text-[#1A237E]" />
+        return <Sparkles className="w-4 h-4 text-[#E11D74]" />
     }
   }
 
@@ -68,19 +68,19 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
   }
 
   const getMedalColor = (rank: number) => {
-    if (rank === 1) return 'bg-[#FFD600] text-[#1A237E] border-amber-400'
-    if (rank === 2) return 'bg-slate-200 text-slate-700 border-slate-300'
+    if (rank === 1) return 'bg-[#E11D74] text-white border-pink-400'
+    if (rank === 2) return 'bg-slate-200 text-slate-800 border-slate-300'
     if (rank === 3) return 'bg-amber-600 text-white border-amber-700'
-    return 'bg-[#1A237E]/10 text-[#1A237E] border-[#1A237E]/20'
+    return 'bg-pink-50 text-[#E11D74] border-pink-200'
   }
 
   const coverUrl = getFileUrl('startups', startup.id, startup.cover_image)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto p-0 bg-white rounded-3xl border-2 border-slate-200 shadow-2xl">
-        {/* Header Visual com Capa ou Gradiente */}
-        <div className="relative h-48 bg-gradient-to-br from-[#1A237E] via-[#283593] to-[#0D47A1] overflow-hidden flex items-end p-6">
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto p-0 bg-white rounded-3xl border-2 border-pink-100 shadow-2xl">
+        {/* Header Visual com Capa ou Gradiente Viva Tec */}
+        <div className="relative h-52 bg-gradient-to-br from-[#1A1A1A] via-[#2A1525] to-[#E11D74] overflow-hidden flex items-end p-6">
           {coverUrl && (
             <img
               src={coverUrl}
@@ -92,7 +92,7 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
           {/* Posicionador de Rank */}
           <div className="absolute top-4 right-4 flex items-center gap-2">
             <span
-              className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border shadow-md flex items-center gap-1.5 ${getMedalColor(
+              className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border shadow-md flex items-center gap-1.5 ${getMedalColor(
                 rankResult.rank,
               )}`}
             >
@@ -101,20 +101,37 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
             </span>
           </div>
 
-          <div className="relative z-10 text-white">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#FFD600] drop-shadow-sm flex items-center gap-1">
-              <Award className="w-3.5 h-3.5 inline" /> Herói Fictício
+          <div className="relative z-10 text-white space-y-0.5">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-pink-300 drop-shadow-sm flex items-center gap-1">
+              <Award className="w-3.5 h-3.5 inline" /> Herói Fictício Viva Tec
             </span>
             <h2 className="text-3xl font-black tracking-tight text-white drop-shadow-md">
               {startup.hero_name}
             </h2>
-            <p className="text-sm font-semibold text-blue-100">
-              Startup Criadora: <strong className="text-white">{startup.name}</strong>
+            <p className="text-sm font-semibold text-pink-100">
+              Startup: <strong className="text-white">{startup.name}</strong>
             </p>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 text-[#1A1A1A]">
+          {/* Estudantes / Integrantes da Startup (PRD V2) */}
+          {startup.estudantes && (
+            <div className="p-4 bg-pink-50/70 border border-pink-200 rounded-2xl flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#E11D74] text-white flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#E11D74] block">
+                  Estudantes Protagonistas (Viva Tec / Senac / Sesc)
+                </span>
+                <p className="text-xs font-bold text-[#1A1A1A] leading-relaxed">
+                  {startup.estudantes}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Pilar ESG e Nota Destaque */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
             <div className="flex items-center gap-2">
@@ -134,8 +151,8 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
 
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-medium text-slate-500">Nota Final Apurada:</span>
-              <span className="text-3xl font-black text-[#1A237E]">{finalScore.toFixed(2)}</span>
-              <span className="text-xs text-slate-400">/ 100</span>
+              <span className="text-3xl font-black text-[#E11D74]">{finalScore.toFixed(2)}</span>
+              <span className="text-xs text-slate-400 font-bold">/ 100</span>
             </div>
           </div>
 
@@ -155,7 +172,7 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
               Sinopse da Jornada do Herói & Proposta
             </h3>
-            <div className="p-4 bg-blue-50/40 border border-blue-100 rounded-2xl text-sm leading-relaxed text-slate-700 font-medium">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm leading-relaxed text-[#1A1A1A] font-medium">
               {startup.synopsis || 'Sem sinopse cadastrada para este herói.'}
             </div>
           </div>
@@ -179,7 +196,7 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
               <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-xs">
                 <span className="text-[11px] font-semibold text-slate-500 block">Criatividade</span>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-lg font-bold text-indigo-700">
+                  <span className="text-lg font-bold text-[#E11D74]">
                     {rankResult.avgCriatividade}
                   </span>
                   <span className="text-[10px] text-slate-400">/ 20</span>

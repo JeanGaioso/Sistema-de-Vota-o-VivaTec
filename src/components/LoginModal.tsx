@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Shield, KeyRound, Sparkles, UserCheck, AlertCircle } from 'lucide-react'
+import { VivaTecLogo } from './VivaTecLogo'
 import { useToast } from '@/hooks/use-toast'
 
 interface LoginModalProps {
@@ -38,7 +39,7 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
     if (success) {
       toast({
         title: 'Acesso Liberado!',
-        description: 'Bem-vindo(a) à plataforma HeroScore Sesc.',
+        description: 'Bem-vindo(a) à plataforma Viva Tec.',
       })
       onClose()
     } else {
@@ -65,16 +66,16 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[480px] p-6 bg-white rounded-2xl shadow-2xl border-2 border-[#1A237E]/20">
-        <DialogHeader className="text-center space-y-2">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-[#1A237E] flex items-center justify-center text-[#FFD600] shadow-md">
-            <Shield className="w-8 h-8" />
+      <DialogContent className="sm:max-w-[480px] p-6 bg-white rounded-3xl shadow-2xl border-2 border-pink-100 text-[#1A1A1A]">
+        <DialogHeader className="text-center space-y-2 flex flex-col items-center">
+          <div className="mx-auto mb-1">
+            <VivaTecLogo iconSize="lg" showTagline={true} />
           </div>
-          <DialogTitle className="text-2xl font-bold text-[#1A237E]">
-            Acesso ao HeroScore
+          <DialogTitle className="text-2xl font-black text-[#1A1A1A]">
+            Acesso ao Viva Tec
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-600">
-            Escola Educar Sesc Monsenhor Jonas Abib • Festival de Heróis Fictícios
+          <DialogDescription className="text-xs text-slate-600 font-medium">
+            Parceria Senac & Sesc • Escola Educar Sesc Monsenhor Jonas Abib
           </DialogDescription>
         </DialogHeader>
 
@@ -86,23 +87,29 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
         )}
 
         <Tabs defaultValue={defaultTab} className="w-full mt-4">
-          <TabsList className="grid grid-cols-2 w-full bg-slate-100 p-1 rounded-xl">
-            <TabsTrigger value="quick" className="rounded-lg text-xs font-semibold py-2">
+          <TabsList className="grid grid-cols-2 w-full bg-pink-50/70 p-1 rounded-xl border border-pink-100">
+            <TabsTrigger
+              value="quick"
+              className="rounded-lg text-xs font-bold py-2 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+            >
               <KeyRound className="w-4 h-4 mr-1.5 inline" /> Acesso Rápido / Banca
             </TabsTrigger>
-            <TabsTrigger value="password" className="rounded-lg text-xs font-semibold py-2">
+            <TabsTrigger
+              value="password"
+              className="rounded-lg text-xs font-bold py-2 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+            >
               <UserCheck className="w-4 h-4 mr-1.5 inline" /> E-mail & Senha
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="quick" className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-[#1A237E] uppercase tracking-wider">
+              <Label className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider">
                 Código do Avaliador / Token Único
               </Label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Ex: eval1, banca2, admin..."
+                  placeholder="Ex: eval1, banca1, admin..."
                   value={quickToken}
                   onChange={(e) => setQuickToken(e.target.value)}
                   onKeyDown={(e) => {
@@ -110,18 +117,18 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                       handleQuickLogin(quickToken)
                     }
                   }}
-                  className="h-12 text-base font-medium rounded-xl border-slate-300 focus:border-[#1A237E]"
+                  className="h-12 text-base font-medium rounded-xl border-slate-300 focus:border-[#E11D74] focus:ring-[#E11D74]"
                 />
                 <Button
                   onClick={() => handleQuickLogin(quickToken)}
                   disabled={loading || !quickToken.trim()}
-                  className="h-12 px-5 bg-[#1A237E] hover:bg-[#283593] text-white font-bold rounded-xl shadow-md"
+                  className="h-12 px-5 bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold rounded-xl shadow-md"
                 >
                   Entrar
                 </Button>
               </div>
               <p className="text-xs text-slate-500">
-                Acesse em menos de 60 segundos com o token distribuído pela comissão.
+                Acesso otimizado (&lt;60s) para tablets e smartphones dos jurados.
               </p>
             </div>
 
@@ -135,18 +142,18 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                   variant="outline"
                   onClick={() => handleQuickLogin('evaluator1@sesc.com')}
                   disabled={loading}
-                  className="justify-between text-left h-auto py-2.5 px-3 border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 text-slate-800 rounded-xl text-xs"
+                  className="justify-between text-left h-auto py-2.5 px-3 border-pink-200 bg-pink-50/50 hover:bg-pink-100/60 text-[#1A1A1A] rounded-xl text-xs"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#E11D74]" />
                     <div>
-                      <strong className="block font-semibold">
-                        Avaliadora Dra. Clara (Banca Sesc)
+                      <strong className="block font-bold">
+                        Avaliadora Dra. Clara (Banca Senac/Sesc)
                       </strong>
                       <span className="text-[11px] text-slate-500">evaluator1@sesc.com</span>
                     </div>
                   </div>
-                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <Sparkles className="w-4 h-4 text-[#E11D74]" />
                 </Button>
 
                 <Button
@@ -154,18 +161,16 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                   variant="outline"
                   onClick={() => handleQuickLogin('evaluator2@sesc.com')}
                   disabled={loading}
-                  className="justify-between text-left h-auto py-2.5 px-3 border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 text-slate-800 rounded-xl text-xs"
+                  className="justify-between text-left h-auto py-2.5 px-3 border-slate-200 bg-slate-50 hover:bg-slate-100 text-[#1A1A1A] rounded-xl text-xs"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-slate-700" />
                     <div>
-                      <strong className="block font-semibold">
-                        Avaliador Me. Lucas (Banca Artes)
-                      </strong>
+                      <strong className="block font-bold">Avaliador Me. Lucas (Banca Artes)</strong>
                       <span className="text-[11px] text-slate-500">evaluator2@sesc.com</span>
                     </div>
                   </div>
-                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  <Sparkles className="w-4 h-4 text-slate-700" />
                 </Button>
 
                 <Button
@@ -173,18 +178,18 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                   variant="outline"
                   onClick={() => handleQuickLogin('jeangaioso@gmail.com')}
                   disabled={loading}
-                  className="justify-between text-left h-auto py-2.5 px-3 border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/70 text-slate-800 rounded-xl text-xs"
+                  className="justify-between text-left h-auto py-2.5 px-3 border-pink-300 bg-pink-100/50 hover:bg-pink-100 text-[#1A1A1A] rounded-xl text-xs"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#1A237E]" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#E11D74]" />
                     <div>
-                      <strong className="block font-semibold text-[#1A237E]">
-                        Comissão Sesc (Admin Geral)
+                      <strong className="block font-bold text-[#1A1A1A]">
+                        Comissão Organizadora (Admin Geral)
                       </strong>
                       <span className="text-[11px] text-slate-500">jeangaioso@gmail.com</span>
                     </div>
                   </div>
-                  <Shield className="w-4 h-4 text-[#1A237E]" />
+                  <Shield className="w-4 h-4 text-[#E11D74]" />
                 </Button>
               </div>
             </div>
@@ -225,7 +230,7 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 bg-[#1A237E] hover:bg-[#283593] text-white font-bold rounded-xl shadow-md"
+                className="w-full h-11 bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold rounded-xl shadow-md"
               >
                 {loading ? 'Entrando...' : 'Entrar com Senha'}
               </Button>

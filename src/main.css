@@ -8,54 +8,53 @@
 
 @layer base {
   :root {
-    /* Identidade Heroic Academic - Sesc */
-    /* Primary: #1A237E (Navy Blue Sesc) -> 234 66% 30% */
-    /* Secondary/Hero: #FFD600 (Gold) -> 50 100% 50% */
-    /* Accent/Penalties: #D32F2F (Energetic Red) -> 0 65% 51% */
-    /* Success: #2E7D32 (Deep Green) -> 123 46% 34% */
-    /* Background: #F5F7FA -> 216 20% 97% */
+    /* Identidade Oficial Viva Tec — PRD V2 */
+    /* Primary: Rosa vibrante / Magenta (#E11D74 / #E6007A) -> 335 85% 50% */
+    /* Typography / High Contrast: Preto (#1A1A1A) -> 0 0% 10% */
+    /* Background & Surfaces: Branco e Cinza Claro (#F8FAFC / #F1F5F9) */
+    /* Secondary/Accent: Viva Magenta Claro (#FFE4F0) / Indigo Dark */
 
-    --background: 216 20% 97%;
-    --foreground: 234 60% 15%;
+    --background: 210 20% 98%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 234 60% 15%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 234 60% 15%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 234 66% 30%;
+    --primary: 335 85% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 50 100% 50%;
-    --secondary-foreground: 234 66% 20%;
+    --secondary: 335 100% 96%;
+    --secondary-foreground: 335 85% 40%;
 
-    --muted: 216 15% 90%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 16% 40%;
 
-    --accent: 0 65% 51%;
+    --accent: 335 85% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 123 46% 34%;
+    --success: 142 71% 35%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 51%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 216 20% 88%;
-    --input: 216 20% 88%;
-    --ring: 234 66% 30%;
+    --border: 220 13% 90%;
+    --input: 220 13% 90%;
+    --ring: 335 85% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    --sidebar-background: 234 66% 25%;
+    --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 50 100% 50%;
-    --sidebar-primary-foreground: 234 66% 20%;
-    --sidebar-accent: 234 60% 35%;
+    --sidebar-primary: 335 85% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 16%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 234 50% 35%;
-    --sidebar-ring: 50 100% 50%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 335 85% 50%;
   }
 
   * {
@@ -97,13 +96,13 @@
     0%,
     100% {
       box-shadow:
-        0 0 15px rgba(255, 214, 0, 0.4),
-        0 0 30px rgba(26, 35, 126, 0.2);
+        0 0 15px rgba(225, 29, 116, 0.35),
+        0 0 30px rgba(225, 29, 116, 0.15);
     }
     50% {
       box-shadow:
-        0 0 25px rgba(255, 214, 0, 0.7),
-        0 0 50px rgba(26, 35, 126, 0.35);
+        0 0 25px rgba(225, 29, 116, 0.65),
+        0 0 50px rgba(225, 29, 116, 0.3);
     }
   }
 
@@ -126,7 +125,7 @@
     animation: slide-up-stagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s backwards;
   }
 
-  .glow-gold {
+  .glow-magenta {
     animation: pulse-glow 3s infinite ease-in-out;
   }
 }
