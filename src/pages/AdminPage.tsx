@@ -98,6 +98,10 @@ export default function AdminPage() {
   const [unpublishModalOpen, setUnpublishModalOpen] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
 
+  // Filtros e busca de Auditoria & Logs
+  const [auditSearch, setAuditSearch] = useState('')
+  const [auditActionFilter, setAuditActionFilter] = useState('ALL')
+
   // Form de Startup
   const [startupName, setStartupName] = useState('')
   const [heroName, setHeroName] = useState('')
@@ -1536,41 +1540,254 @@ export default function AdminPage() {
 
         {/* TAB 5: AUDITORIA E LOGS DO SISTEMA */}
         <TabsContent value="audit" className="space-y-4">
-          <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md p-6 space-y-4">
-            <div>
-              <h3 className="text-lg font-black text-[#1A1A1A]">
-                Registro de Auditoria & Trilha de Integridade
-              </h3>
-              <p className="text-xs text-slate-500">
-                Histórico imutável de todas as notas computadas, penalidades inseridas e publicação
-                de resultados
-              </p>
-            </div>
+          {(() => {
+            // Filtragem dos logs
+            const filteredAuditLogs = auditLogs.filter((log) => {
+              if (auditActionFilter !== 'ALL' && log.action !== auditActionFilter) {
+                return false
+              }
+              if (auditSearch.trim()) {
+                const term = auditSearch.toLowerCase()
+                const actionMatch = log.action?.toLowerCase().includes(term)
+                const detailsMatch = log.details?.toLowerCase().includes(term)
+                const emailMatch = log.user_email?.toLowerCase().includes(term)
+                const startupMatch = log.startup_name?.toLowerCase().includes(term)
+                if (!actionMatch && !detailsMatch && !emailMatch && !startupMatch) {
+                  return false
+                }
+              }
+              return true
+            })
 
-            <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
-              {auditLogs.map((log) => (
-                <div key={log.id} className="py-3 flex items-start justify-between gap-3 text-xs">
+            // Lista de ações distintas para o select de filtro
+            const uniqueActions = Array.from(
+              new Set(auditLogs.map((l) => l.action).filter(Boolean)),
+            ).sort()
+
+            // Função para formatar data e hora com fallback seguro
+            const formatDateTimeFull = (isoString?: string) => {
+              if (!isoString) return { full: '—', date: '—', time: '—' }
+              try {
+                const d = new Date(isoString)
+                if (isNaN(d.getTime())) return { full: '—', date: '—', time: '—' }
+                const pad = (n: number) => String(n).padStart(2, '0')
+                const dia = pad(d.getDate())
+                const mes = pad(d.getMonth() + 1)
+                const ano = d.getFullYear()
+                const hora = pad(d.getHours())
+                const min = pad(d.getMinutes())
+                const seg = pad(d.getSeconds())
+                return {
+                  full: `${dia}/${mes}/${ano} ${hora}:${min}:${seg}`,
+                  date: `${dia}/${mes}/${ano}`,
+                  time: `${hora}:${min}:${seg}`,
+                }
+              } catch {
+                return { full: '—', date: '—', time: '—' }
+              }
+            }
+
+            // Exportação para CSV (compatível com Excel)
+            const handleExportAuditLogs = () => {
+              if (filteredAuditLogs.length === 0) {
+                toast({
+                  title: 'Nenhum registro para exportar',
+                  description: 'Não há registros de auditoria correspondentes aos filtros atuais.',
+                  variant: 'destructive',
+                })
+                return
+              }
+
+              const escapeCsv = (val?: string | null) => {
+                if (val === undefined || val === null) return '""'
+                const str = String(val).replace(/"/g, '""')
+                return `"${str}"`
+              }
+
+              // Cabeçalhos em português com separador ponto-e-vírgula (padrão Excel pt-BR)
+              const headers = [
+                'Data / Hora',
+                'Ação',
+                'Startup / Alvo',
+                'Detalhes',
+                'Responsável (E-mail)',
+                'ID do Registro',
+              ]
+
+              const rows = filteredAuditLogs.map((log) => {
+                const dt = formatDateTimeFull(log.created)
+                return [
+                  escapeCsv(dt.full),
+                  escapeCsv(log.action),
+                  escapeCsv(log.startup_name || ''),
+                  escapeCsv(log.details || ''),
+                  escapeCsv(log.user_email || ''),
+                  escapeCsv(log.id),
+                ].join(';')
+              })
+
+              // Adicionar BOM UTF-8 (\uFEFF) para que o Excel abra com acentos corretos automaticamente
+              const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\r\n')
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+              const url = URL.createObjectURL(blob)
+              const link = document.createElement('a')
+
+              const now = new Date()
+              const pad = (n: number) => String(n).padStart(2, '0')
+              const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+              link.href = url
+              link.setAttribute('download', `auditoria-vivatec-${dateStr}.csv`)
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+              URL.revokeObjectURL(url)
+
+              toast({
+                title: 'Download Concluído',
+                description: `Exportados ${filteredAuditLogs.length} registro(s) de auditoria com sucesso.`,
+              })
+            }
+
+            return (
+              <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-100">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-[#E11D74] bg-pink-50 px-2 py-0.5 rounded border border-pink-100">
-                        {log.action}
-                      </span>
-                      {log.startup_name && (
-                        <span className="font-bold text-slate-800">[{log.startup_name}]</span>
+                    <h3 className="text-lg font-black text-[#1A1A1A] flex items-center gap-2">
+                      <span>Registro de Auditoria & Trilha de Integridade</span>
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] font-bold bg-pink-50 text-[#E11D74] border-pink-200"
+                      >
+                        {filteredAuditLogs.length}{' '}
+                        {filteredAuditLogs.length === 1 ? 'registro' : 'registros'}
+                        {filteredAuditLogs.length !== auditLogs.length &&
+                          ` (de ${auditLogs.length})`}
+                      </Badge>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Histórico imutável de todas as notas computadas, penalidades inseridas e
+                      publicação de resultados
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={fetchAllAdminData}
+                      className="rounded-xl text-xs font-bold h-9 border-slate-200 hover:bg-slate-50 text-slate-700"
+                      title="Recarregar registros"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                      Atualizar
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleExportAuditLogs}
+                      className="rounded-xl text-xs font-black h-9 px-4 bg-[#E11D74] hover:bg-[#BE185D] text-white shadow-md flex items-center gap-2 transition-all"
+                      title="Baixar auditoria em formato CSV compatível com Excel"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Exportar Logs (CSV)</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Filtros da auditoria */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+                  <div className="sm:col-span-7 lg:col-span-8">
+                    <Input
+                      placeholder="Buscar por ação, startup, detalhes ou e-mail..."
+                      value={auditSearch}
+                      onChange={(e) => setAuditSearch(e.target.value)}
+                      className="h-9 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="sm:col-span-5 lg:col-span-4">
+                    <Select value={auditActionFilter} onValueChange={setAuditActionFilter}>
+                      <SelectTrigger className="h-9 rounded-xl text-xs">
+                        <SelectValue placeholder="Todas as ações" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">Todas as Ações ({auditLogs.length})</SelectItem>
+                        {uniqueActions.map((action) => (
+                          <SelectItem key={action} value={action}>
+                            {action}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Lista de Registros */}
+                <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-1">
+                  {filteredAuditLogs.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 space-y-2">
+                      <History className="w-8 h-8 mx-auto text-slate-300 stroke-1" />
+                      <p className="text-xs font-medium">
+                        Nenhum registro de auditoria encontrado.
+                      </p>
+                      {(auditSearch || auditActionFilter !== 'ALL') && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setAuditSearch('')
+                            setAuditActionFilter('ALL')
+                          }}
+                          className="text-xs text-[#E11D74] hover:bg-pink-50 h-8"
+                        >
+                          Limpar filtros
+                        </Button>
                       )}
                     </div>
-                    <p className="text-slate-600 mt-1">{log.details}</p>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      Responsável: {log.user_email}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-mono whitespace-nowrap">
-                    {log.created ? new Date(log.created).toLocaleTimeString('pt-BR') : '—'}
-                  </span>
+                  ) : (
+                    filteredAuditLogs.map((log) => {
+                      const dt = formatDateTimeFull(log.created)
+                      return (
+                        <div
+                          key={log.id}
+                          className="py-3 flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 text-xs hover:bg-slate-50/70 px-2 rounded-xl transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-black text-[#E11D74] bg-pink-50 px-2 py-0.5 rounded border border-pink-100 text-[11px]">
+                                {log.action}
+                              </span>
+                              {log.startup_name && (
+                                <span className="font-bold text-slate-800">
+                                  [{log.startup_name}]
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-600 mt-1 break-words">{log.details}</p>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">
+                              Responsável:{' '}
+                              <strong className="font-medium text-slate-500">
+                                {log.user_email || '—'}
+                              </strong>
+                            </span>
+                          </div>
+
+                          {/* Data e hora completa formatada (dd/mm/aaaa hh:mm:ss, pt-BR) com badge e estilo Viva Tec */}
+                          <div className="sm:text-right flex-shrink-0 self-start sm:self-auto pt-1 sm:pt-0">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-mono text-[11px] shadow-xs">
+                              <Clock className="w-3 h-3 text-[#E11D74] flex-shrink-0" />
+                              <span className="font-bold text-slate-800">{dt.date}</span>
+                              <span className="text-slate-500 font-medium">{dt.time}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )
+          })()}
         </TabsContent>
       </Tabs>
 
