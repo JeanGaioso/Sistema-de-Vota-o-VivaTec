@@ -5,6 +5,7 @@ import { calculateRanking, getFileUrl } from '@/lib/ranking'
 import { useRealtime } from '@/hooks/use-realtime'
 import { StartupDetailModal } from '@/components/StartupDetailModal'
 import { ShareQRCodeModal } from '@/components/ShareQRCodeModal'
+import { VivaTecLogo } from '@/components/VivaTecLogo'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -116,17 +117,24 @@ export default function Index() {
         <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-pink-400/20 blur-3xl" />
 
         <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-center md:text-left space-y-2">
+          <div className="text-center md:text-left space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#E11D74]/30 border border-[#E11D74]/60 text-pink-200 text-xs font-black tracking-wider uppercase">
-              <Sparkles className="w-3.5 h-3.5 text-[#E11D74]" /> Festival de Heróis Fictícios •
+              <Sparkles className="w-3.5 h-3.5 text-pink-300" /> Festival de Heróis Fictícios •
               Senac & Sesc
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-              Vitrine de <span className="text-[#E11D74] drop-shadow-md">Vencedores</span>
-            </h1>
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
+              <VivaTecLogo iconSize="lg" showTagline={false} onlyIcon={true} className="mt-1" />
+              <div>
+                <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
+                  Vitrine de <span className="text-pink-300 drop-shadow-md">Vencedores</span>
+                </h1>
+                <p className="text-xs sm:text-sm text-pink-200 uppercase tracking-widest font-extrabold mt-0.5">
+                  VIVA TEC • Próxima parada: Ensino Médio
+                </p>
+              </div>
+            </div>
             <p className="text-sm sm:text-base text-pink-100 max-w-2xl font-medium">
-              Viva Tec — Apresentações Artísticas, Inovação e Impacto ESG •{' '}
-              <strong className="text-white">Próxima parada: Ensino Médio</strong>
+              Apresentações Artísticas, Inovação e Impacto ESG dos estudantes protagonistas.
             </p>
           </div>
 
@@ -217,10 +225,13 @@ export default function Index() {
           {/* PÓDIO HEROICO VIVA TEC (1º, 2º e 3º Lugares com animação e rosa vibrante) */}
           {ranking.length > 0 && (
             <section className="space-y-6">
-              <div className="text-center space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#E11D74]">
-                  Próxima parada: Ensino Médio
-                </span>
+              <div className="text-center space-y-2 flex flex-col items-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 border border-pink-200">
+                  <VivaTecLogo iconSize="sm" showTagline={false} onlyIcon={true} />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#E11D74]">
+                    Próxima parada: Ensino Médio
+                  </span>
+                </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-[#1A1A1A] tracking-tight">
                   Pódio dos Campeões Viva Tec
                 </h2>

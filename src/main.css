@@ -9,7 +9,7 @@
 @layer base {
   :root {
     /* Identidade Oficial Viva Tec — PRD V2 */
-    /* Primary: Rosa vibrante / Magenta (#E11D74 / #E6007A) -> 335 85% 50% */
+    /* Primary: Rosa vibrante / Magenta (#E11D74 / #D81B60) -> 335 85% 50% */
     /* Typography / High Contrast: Preto (#1A1A1A) -> 0 0% 10% */
     /* Background & Surfaces: Branco e Cinza Claro (#F8FAFC / #F1F5F9) */
     /* Secondary/Accent: Viva Magenta Claro (#FFE4F0) / Indigo Dark */
@@ -96,14 +96,23 @@
     0%,
     100% {
       box-shadow:
-        0 0 15px rgba(225, 29, 116, 0.35),
-        0 0 30px rgba(225, 29, 116, 0.15);
+        0 0 18px rgba(225, 29, 116, 0.35),
+        0 0 35px rgba(139, 26, 122, 0.2);
     }
     50% {
       box-shadow:
-        0 0 25px rgba(225, 29, 116, 0.65),
-        0 0 50px rgba(225, 29, 116, 0.3);
+        0 0 28px rgba(225, 29, 116, 0.65),
+        0 0 55px rgba(112, 26, 117, 0.35);
     }
+  }
+
+  /* Gradiente oficial Viva Tec em harmonia com o novo logotipo (magenta para roxo) */
+  .bg-gradient-vivatec {
+    background: linear-gradient(135deg, #701a75 0%, #9d174d 45%, #e11d74 100%);
+  }
+
+  .bg-gradient-vivatec-subtle {
+    background: linear-gradient(135deg, rgba(112, 26, 117, 0.08) 0%, rgba(225, 29, 116, 0.08) 100%);
   }
 
   @keyframes hero-badge-shine {
