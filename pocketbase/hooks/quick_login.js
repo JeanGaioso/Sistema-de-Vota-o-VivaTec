@@ -62,8 +62,8 @@ routerAdd('POST', '/backend/v1/quick-login', (e) => {
     return e.json(403, { message: 'Acesso negado: avaliador desativado pela comissão.' })
   }
 
-  // Gerar token de autenticação oficial do PocketBase para o registro
-  const authToken = $app.createAuthToken(userRecord)
+  // Gerar token de autenticação oficial do PocketBase para o registro (v0.23+ usa record.newAuthToken())
+  const authToken = userRecord.newAuthToken()
 
   return e.json(200, {
     token: authToken,

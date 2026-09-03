@@ -33,18 +33,41 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Atualizar form quando evaluator mudar
+  // Atualizar form quando evaluator mudar ou modal abrir
   React.useEffect(() => {
+    if (!isOpen) return
+
+    let isMounted = true
     if (evaluator) {
       setName(evaluator.name || '')
       setEmail(evaluator.email || '')
       setQuickToken(evaluator.quick_token || '')
       setPassword('')
+
+      // Se por ventura o email vier vazio da listagem (ex.: visibilidade restrita), busca o registro completo por ID
+      if (!evaluator.email && evaluator.id) {
+        evaluatorsService
+          .getById(evaluator.id)
+          .then((fresh) => {
+            if (isMounted && fresh) {
+              if (fresh.email) setEmail(fresh.email)
+              if (fresh.name) setName(fresh.name)
+              if (fresh.quick_token) setQuickToken(fresh.quick_token)
+            }
+          })
+          .catch((err) => {
+            console.warn('Não foi possível carregar dados detalhados do jurado:', err)
+          })
+      }
     } else {
       setName('')
       setEmail('')
       setQuickToken('')
       setPassword('Vivatec@2026')
+    }
+
+    return () => {
+      isMounted = false
     }
   }, [evaluator, isOpen])
 
@@ -54,6 +77,15 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
       toast({
         title: 'Campos Obrigatórios',
         description: 'Preencha o nome e e-mail do avaliador.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (password.trim() && password.trim().length < 8) {
+      toast({
+        title: 'Senha Muito Curta',
+        description: 'A senha deve conter no mínimo 8 caracteres.',
         variant: 'destructive',
       })
       return
@@ -70,7 +102,7 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
         })
         await auditLogsService.log(
           'JURADO_EDITADO',
-          `Dados do avaliador ${name} (${email}) atualizados pela comissão.`,
+          `Dados do avaliador ${name.trim()} (${email.trim()}) atualizados pela comissão.`,
         )
         toast({
           title: 'Jurado Atualizado!',
@@ -85,11 +117,11 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
         })
         await auditLogsService.log(
           'JURADO_CADASTRADO',
-          `Novo avaliador da banca cadastrado: ${name} (${email}) com permissão de avaliação.`,
+          `Novo avaliador da banca cadastrado: ${name.trim()} (${email.trim()}) com permissão de avaliação.`,
         )
         toast({
           title: 'Jurado Cadastrado!',
-          description: `Avaliador ${name} pronto para acessar a banca.`,
+          description: `Avaliador ${name.trim()} pronto para acessar a banca.`,
         })
       }
       onSuccess()
@@ -137,7 +169,7 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-[#1A1A1A]">E-mail Institucional *</Label>
+            <Label className="text-xs font-bold text-[#1A1A1A]">E-mail *</Label>
             <Input
               type="email"
               placeholder="Ex: juliana.silveira@sesc.com"

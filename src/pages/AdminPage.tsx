@@ -980,7 +980,7 @@ export default function AdminPage() {
                 <thead className="bg-slate-100 text-[11px] font-extrabold text-slate-600 uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3.5 px-4">Avaliador (Nome)</th>
-                    <th className="py-3.5 px-4">E-mail Institucional</th>
+                    <th className="py-3.5 px-4">E-mail</th>
                     <th className="py-3.5 px-4 text-center">Código / Token Rápido</th>
                     <th className="py-3.5 px-4 text-center">Status</th>
                     <th className="py-3.5 px-4 text-center">Avaliações Feitas</th>

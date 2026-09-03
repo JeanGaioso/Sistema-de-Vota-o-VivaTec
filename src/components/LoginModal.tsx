@@ -199,7 +199,7 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
             <form onSubmit={handlePasswordLogin} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-semibold text-slate-700">
-                  E-mail institucional
+                  E-mail
                 </Label>
                 <Input
                   id="email"

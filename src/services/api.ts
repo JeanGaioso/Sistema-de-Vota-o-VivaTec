@@ -25,8 +25,8 @@ export const evaluatorsService = {
     password?: string
     quick_token?: string
   }): Promise<EvaluatorUser> {
-    const defaultPassword =
-      data.password && data.password.length >= 8 ? data.password : 'Vivatec@2026'
+    const passwordToUse =
+      data.password && data.password.trim().length >= 8 ? data.password.trim() : 'Vivatec@2026'
     const token =
       data.quick_token?.trim() ||
       data.email
@@ -37,8 +37,8 @@ export const evaluatorsService = {
 
     const userRecord = await pb.collection('users').create<EvaluatorUser>({
       email: data.email.trim(),
-      password: defaultPassword,
-      passwordConfirm: defaultPassword,
+      password: passwordToUse,
+      passwordConfirm: passwordToUse,
       name: data.name.trim(),
       role: 'evaluator',
       is_active: true,
@@ -64,9 +64,9 @@ export const evaluatorsService = {
     if (data.email !== undefined) payload.email = data.email.trim()
     if (data.is_active !== undefined) payload.is_active = data.is_active
     if (data.quick_token !== undefined) payload.quick_token = data.quick_token.trim()
-    if (data.password && data.password.length >= 8) {
-      payload.password = data.password
-      payload.passwordConfirm = data.password
+    if (data.password && data.password.trim().length >= 8) {
+      payload.password = data.password.trim()
+      payload.passwordConfirm = data.password.trim()
     }
     return await pb.collection('users').update<EvaluatorUser>(id, payload)
   },
