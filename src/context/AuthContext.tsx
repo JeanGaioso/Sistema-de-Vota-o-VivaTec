@@ -100,7 +100,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return await login(clean, 'Skip@Pass')
     }
 
-    // Tentar buscar usuário no PocketBase por quick_token dinâmico
+    // 1. Tentar login direto via endpoint seguro do backend (/backend/v1/quick-login)
+    try {
+      const res = await pb.send<{ token: string; record: Record<string, any> }>(
+        '/backend/v1/quick-login',
+        {
+          method: 'POST',
+          body: { token: clean },
+        },
+      )
+
+      if (res && res.token && res.record) {
+        pb.authStore.save(res.token, res.record as unknown as AuthModel)
+        updateUserFromStore()
+        return true
+      }
+    } catch (backendErr) {
+      console.warn(
+        'Endpoint /backend/v1/quick-login falhou ou indisponível, tentando SDK:',
+        backendErr,
+      )
+    }
+
+    // 2. Tentar buscar usuário no PocketBase por quick_token exato ou minúsculo
     try {
       const records = await pb.collection('users').getFullList({
         filter: `quick_token = "${clean.toLowerCase()}" || quick_token = "${clean}"`,
@@ -118,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn('Busca por quick_token falhou, usando fallback:', err)
     }
 
-    // Se for token predefinido ou identificador curto de jurado (fallback)
+    // 3. Se for token predefinido de jurado ou admin (fallback de contingência)
     const tokenMap: Record<string, string> = {
       admin: 'jeangaioso@gmail.com',
       'sesc-admin': 'jeangaioso@gmail.com',
@@ -128,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       evaluator2: 'evaluator2@sesc.com',
       eval2: 'evaluator2@sesc.com',
       banca2: 'evaluator2@sesc.com',
+      tec3: 'profmauro@vivatec.com.br',
     }
 
     const mappedEmail = tokenMap[clean.toLowerCase()]
@@ -137,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return await login(mappedEmail, 'Skip@Pass')
     }
 
-    // Tentar autenticar com senha padrão
+    // 4. Último recurso: tentar login direto com o input como e-mail
     const ok = await login(clean, 'Vivatec@2026')
     if (ok) return true
     return await login(clean, 'Skip@Pass')

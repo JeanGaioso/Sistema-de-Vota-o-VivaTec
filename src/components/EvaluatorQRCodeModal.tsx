@@ -26,7 +26,9 @@ export function EvaluatorQRCodeModal({ isOpen, onClose, evaluator }: EvaluatorQR
 
   const baseUrl =
     typeof window !== 'undefined' ? window.location.origin : 'https://vivatec.sesc.edu.br'
-  const token = evaluator.quick_token || evaluator.email.split('@')[0]
+  // Priorizar quick_token explícito do usuário, com fallback no identificador antes de '@'
+  const rawToken = evaluator.quick_token?.trim() || evaluator.email.split('@')[0].trim()
+  const token = rawToken || evaluator.id
   // Link de acesso direto para o avaliador
   const directAccessUrl = `${baseUrl}/avaliar?token=${encodeURIComponent(token)}`
 
@@ -74,9 +76,11 @@ export function EvaluatorQRCodeModal({ isOpen, onClose, evaluator }: EvaluatorQR
         <div className="py-3 flex flex-col items-center justify-center">
           <div className="p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-md inline-block relative">
             <img
+              key={`qr-${evaluator.id}-${token}`}
               src={qrCodeUrl}
               alt={`QR Code ${evaluator.name}`}
-              className="w-48 h-48 object-contain rounded-xl"
+              className="w-48 h-48 object-contain rounded-xl bg-white"
+              loading="eager"
             />
             <div className="mt-2 text-[11px] font-bold text-[#E11D74] flex items-center justify-center gap-1">
               <Smartphone className="w-3.5 h-3.5" /> Aponte a câmera do tablet ou smartphone

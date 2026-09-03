@@ -76,23 +76,55 @@ export default function EvaluatorPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const tokenParam = params.get('token')
-    if (tokenParam && !isAuthenticated) {
-      const doAutoLogin = async () => {
-        try {
-          const success = await loginWithTokenOrQuickAccess(tokenParam)
-          if (success) {
-            toast({
-              title: 'Acesso Rápido da Banca!',
-              description: 'Login realizado com sucesso via QR Code.',
-            })
+    if (tokenParam) {
+      // Se já autenticado, verificar se o token atual coincide com o do usuário autenticado
+      if (isAuthenticated && user) {
+        const userToken = (user.quick_token || user.email.split('@')[0] || '').toLowerCase()
+        const requestedToken = tokenParam.trim().toLowerCase()
+        if (userToken && requestedToken && userToken !== requestedToken) {
+          // Usuário diferente tentando acessar via outro QR Code -> efetuar novo login com o token indicado
+          const switchUser = async () => {
+            try {
+              const success = await loginWithTokenOrQuickAccess(tokenParam)
+              if (success) {
+                toast({
+                  title: 'Acesso Rápido da Banca!',
+                  description: 'Sessão alterada para o jurado deste QR Code.',
+                })
+              }
+            } catch (e) {
+              console.warn('Falha na troca de sessão via QR Code:', e)
+            }
           }
-        } catch (e) {
-          console.warn('Falha no auto-login:', e)
+          switchUser()
         }
+        return
       }
-      doAutoLogin()
+
+      if (!isAuthenticated) {
+        const doAutoLogin = async () => {
+          try {
+            const success = await loginWithTokenOrQuickAccess(tokenParam)
+            if (success) {
+              toast({
+                title: 'Acesso Rápido da Banca!',
+                description: 'Login realizado com sucesso via QR Code.',
+              })
+            } else {
+              toast({
+                title: 'QR Code Não Reconhecido',
+                description: 'Não foi possível autenticar o jurado com este código.',
+                variant: 'destructive',
+              })
+            }
+          } catch (e) {
+            console.warn('Falha no auto-login:', e)
+          }
+        }
+        doAutoLogin()
+      }
     }
-  }, [])
+  }, [isAuthenticated, user?.id, user?.quick_token])
 
   useEffect(() => {
     if (isAuthenticated) {

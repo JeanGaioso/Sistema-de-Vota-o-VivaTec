@@ -368,7 +368,8 @@ export default function AdminPage() {
   }
 
   const handleOpenQrCode = (evaluator: EvaluatorUser) => {
-    setSelectedEvaluatorForQr(evaluator)
+    // Clonar para garantir nova referência e re-render imediato
+    setSelectedEvaluatorForQr({ ...evaluator })
     setQrCodeModalOpen(true)
   }
 
