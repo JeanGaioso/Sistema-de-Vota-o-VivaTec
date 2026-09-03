@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { startupsService, evaluationsService, settingsService } from '@/services/api'
-import { Startup, Evaluation, StartupRankResult } from '@/types'
+import { Startup, Evaluation, StartupRankResult, Setting } from '@/types'
 import { calculateRanking, getFileUrl } from '@/lib/ranking'
 import { useRealtime } from '@/hooks/use-realtime'
 import { StartupDetailModal } from '@/components/StartupDetailModal'
 import { ShareQRCodeModal } from '@/components/ShareQRCodeModal'
 import { VivaTecLogo } from '@/components/VivaTecLogo'
+import { CountdownSuspense } from '@/components/CountdownSuspense'
+import { soundManager } from '@/lib/soundEffects'
+import { firePodiumConfetti } from '@/lib/confetti'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -24,6 +27,8 @@ import {
   Radio,
   Clock,
   RefreshCw,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
 
 export default function Index() {
@@ -34,15 +39,49 @@ export default function Index() {
   const [selectedRankResult, setSelectedRankResult] = useState<StartupRankResult | null>(null)
   const [qrModalOpen, setQrModalOpen] = useState(false)
 
+  // Estado da contagem de suspense de 10s
+  const [isCountingDown, setIsCountingDown] = useState(false)
+  const [isMuted, setIsMuted] = useState(() => soundManager.getIsMuted())
+
+  // Referência para controlar se o status anterior era 'waiting' (virada em tempo real)
+  const prevStatusRef = useRef<'waiting' | 'published' | null>(null)
+  const hasTriggeredAnnouncementRef = useRef(false)
+
   const fetchData = async () => {
     try {
-      const [startupsList, evalList, status] = await Promise.all([
+      const [startupsList, evalList, statusRecord] = await Promise.all([
         startupsService.getAll(),
         evaluationsService.getAll(),
-        settingsService.getStatus(),
+        settingsService.getStatusRecord(),
       ])
       setStartups(startupsList)
       setEvaluations(evalList)
+
+      const status = (statusRecord?.value as 'waiting' | 'published') || 'waiting'
+      const previousStatus = prevStatusRef.current
+
+      // Checa se acabou de mudar de 'waiting' para 'published' em tempo real
+      if (
+        previousStatus === 'waiting' &&
+        status === 'published' &&
+        !hasTriggeredAnnouncementRef.current
+      ) {
+        hasTriggeredAnnouncementRef.current = true
+        setIsCountingDown(true)
+      } else if (previousStatus === null && status === 'published') {
+        // Usuário acabou de abrir a página.
+        // Se a publicação ocorreu há menos de 10 segundos e ainda não rodou a contagem nesta aba:
+        if (statusRecord?.updated && !hasTriggeredAnnouncementRef.current) {
+          const updatedTime = new Date(statusRecord.updated).getTime()
+          const timeSincePublishSec = (Date.now() - updatedTime) / 1000
+          if (timeSincePublishSec >= 0 && timeSincePublishSec < 10) {
+            hasTriggeredAnnouncementRef.current = true
+            setIsCountingDown(true)
+          }
+        }
+      }
+
+      prevStatusRef.current = status
       setEventStatus(status)
     } catch (err) {
       console.error('Erro ao buscar dados da vitrine:', err)
@@ -52,7 +91,18 @@ export default function Index() {
   }
 
   // Realtime hook nas coleções do PocketBase
-  useRealtime('settings', () => {
+  useRealtime('settings', (record: { record?: Record<string, unknown> }) => {
+    if (record?.record && record.record.key === 'event_status') {
+      const newStatus = record.record.value as 'waiting' | 'published'
+      if (
+        prevStatusRef.current === 'waiting' &&
+        newStatus === 'published' &&
+        !hasTriggeredAnnouncementRef.current
+      ) {
+        hasTriggeredAnnouncementRef.current = true
+        setIsCountingDown(true)
+      }
+    }
     fetchData()
   })
   useRealtime('startups', () => {
@@ -65,6 +115,21 @@ export default function Index() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  // Callback chamado quando os 10s da contagem terminam
+  const handleCountdownComplete = () => {
+    setIsCountingDown(false)
+    // 1. Toca fogos de artifício e aplausos/vibração da plateia
+    soundManager.playCelebrationSound()
+    // 2. Dispara canhões laterais de confetes direcionados ao topo/centro (onde fica o 1º colocado)
+    firePodiumConfetti(5000)
+  }
+
+  const handleToggleMute = () => {
+    const nextMuted = !isMuted
+    setIsMuted(nextMuted)
+    soundManager.setMuted(nextMuted)
+  }
 
   // Cálculo de ranking oficial
   const ranking = calculateRanking(startups, evaluations)
@@ -109,6 +174,14 @@ export default function Index() {
 
   return (
     <div className="flex-1 flex flex-col pb-16">
+      {/* Tela de Contagem Regressiva de 10 Segundos com Rufar de Tambores */}
+      {isCountingDown && (
+        <CountdownSuspense
+          onComplete={handleCountdownComplete}
+          onMuteToggle={(muted) => setIsMuted(muted)}
+        />
+      )}
+
       {/* Banner Principal do Festival Viva Tec */}
       <section className="relative bg-gradient-to-br from-[#1A1A1A] via-[#2A1525] to-[#E11D74] text-white py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-b-4 border-[#E11D74] overflow-hidden">
         {/* Elementos decorativos */}
@@ -139,6 +212,25 @@ export default function Index() {
           </div>
 
           <div className="flex items-center gap-3">
+            {eventStatus === 'published' && (
+              <Button
+                onClick={handleToggleMute}
+                variant="outline"
+                size="icon"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/30 rounded-2xl h-11 w-11 shadow-md backdrop-blur-sm"
+                title={
+                  isMuted
+                    ? 'Áudio mutado (clique para desmutar)'
+                    : 'Áudio ativo (clique para mutar)'
+                }
+              >
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4 text-pink-300" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-white" />
+                )}
+              </Button>
+            )}
             <Button
               onClick={() => setQrModalOpen(true)}
               variant="outline"

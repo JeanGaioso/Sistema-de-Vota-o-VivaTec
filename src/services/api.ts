@@ -218,6 +218,14 @@ export const settingsService = {
     }
   },
 
+  async getStatusRecord(): Promise<Setting | null> {
+    try {
+      return await pb.collection('settings').getFirstListItem<Setting>('key = "event_status"')
+    } catch {
+      return null
+    }
+  },
+
   async setStatus(status: 'waiting' | 'published'): Promise<Setting> {
     try {
       const record = await pb

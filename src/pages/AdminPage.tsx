@@ -37,6 +37,8 @@ import { EvaluatorQRCodeModal } from '@/components/EvaluatorQRCodeModal'
 import { OrganizerModal } from '@/components/OrganizerModal'
 import { PostEventReportView } from '@/components/PostEventReportView'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
+import { firePodiumConfetti } from '@/lib/confetti'
+import { soundManager } from '@/lib/soundEffects'
 import {
   LayoutDashboard,
   Trophy,
@@ -174,16 +176,15 @@ export default function AdminPage() {
 
   const ranking = calculateRanking(startups, evaluations)
 
-  // Confete simples em Canvas
+  // Confete de canhões laterais e comemoração
   const triggerConfetti = () => {
     try {
-      const count = 200
-      const defaults = { origin: { y: 0.7 } }
-      // Fallback visual de comemoração
+      // Dispara os canhões laterais direcionados ao topo/centro
+      firePodiumConfetti(4500)
       toast({
         title: '🎉 VITRINE PUBLICADA COM SUCESSO! 🎉',
         description:
-          'Todos os alunos e familiares no ginásio agora visualizam o resultado oficial!',
+          'Contagem regressiva de suspense iniciada na Vitrine pública para todos os alunos e familiares!',
       })
     } catch {
       /* intentionally ignored */
@@ -191,13 +192,16 @@ export default function AdminPage() {
   }
 
   const handlePublish = async () => {
+    // Desbloqueia o AudioContext via gesto de clique do admin
+    soundManager.unlockAudio().catch(() => {})
+
     setIsPublishing(true)
     try {
       await settingsService.setStatus('published')
       setSettingsStatus('published')
       await auditLogsService.log(
         'STATUS_PUBLICADO',
-        `Vitrine homologada e publicada pelo coordenador ${user?.email}. Pódio liberado.`,
+        `Vitrine homologada e publicada pelo coordenador ${user?.email}. Contagem de suspense e pódio liberados.`,
       )
       setPublishModalOpen(false)
       triggerConfetti()
