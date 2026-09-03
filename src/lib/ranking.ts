@@ -43,6 +43,14 @@ export function calculateRanking(
     let sumBriefing = 0
     let sumGestaoTempo = 0
     const feedbacks: string[] = []
+    const qualitativeObservations: {
+      evaluatorId: string
+      evaluatorName: string
+      feedback: string
+      totalScore: number
+      isFinalized: boolean
+      updated?: string
+    }[] = []
 
     evals.forEach((ev) => {
       const singleTotal =
@@ -65,6 +73,14 @@ export function calculateRanking(
 
       if (ev.feedback && ev.feedback.trim()) {
         feedbacks.push(ev.feedback.trim())
+        qualitativeObservations.push({
+          evaluatorId: ev.evaluator,
+          evaluatorName: ev.expand?.evaluator?.name || 'Avaliador da Banca',
+          feedback: ev.feedback.trim(),
+          totalScore: singleTotal,
+          isFinalized: !!ev.is_finalized,
+          updated: ev.updated,
+        })
       }
     })
 
@@ -94,6 +110,7 @@ export function calculateRanking(
       timePenalty: penalty,
       finalScore,
       feedbacks,
+      qualitativeObservations,
     })
   })
 

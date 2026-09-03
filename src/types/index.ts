@@ -116,6 +116,27 @@ export const EVALUATION_CRITERIA: CriteriaConfig[] = [
   },
 ]
 
+export interface EvaluatorUser {
+  id: string
+  name: string
+  email: string
+  role?: 'admin' | 'evaluator'
+  is_active?: boolean
+  quick_token?: string
+  avatar?: string
+  created?: string
+  updated?: string
+}
+
+export interface QualitativeObservation {
+  evaluatorId: string
+  evaluatorName: string
+  feedback: string
+  totalScore: number
+  isFinalized: boolean
+  updated?: string
+}
+
 export interface StartupRankResult {
   startup: Startup
   evaluationsCount: number
@@ -133,4 +154,5 @@ export interface StartupRankResult {
   tied: boolean
   tieBreakerReason?: string
   feedbacks: string[]
+  qualitativeObservations?: QualitativeObservation[]
 }

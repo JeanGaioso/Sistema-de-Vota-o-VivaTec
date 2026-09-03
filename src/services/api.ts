@@ -1,5 +1,88 @@
 import pb from '@/lib/pocketbase/client'
-import { Startup, Evaluation, Setting, AuditLog } from '@/types'
+import { Startup, Evaluation, Setting, AuditLog, EvaluatorUser } from '@/types'
+
+export const evaluatorsService = {
+  async getAll(): Promise<EvaluatorUser[]> {
+    return await pb.collection('users').getFullList<EvaluatorUser>({
+      filter: 'role = "evaluator"',
+      sort: 'name',
+    })
+  },
+
+  async getAllUsers(): Promise<EvaluatorUser[]> {
+    return await pb.collection('users').getFullList<EvaluatorUser>({
+      sort: 'role,name',
+    })
+  },
+
+  async getById(id: string): Promise<EvaluatorUser> {
+    return await pb.collection('users').getOne<EvaluatorUser>(id)
+  },
+
+  async create(data: {
+    name: string
+    email: string
+    password?: string
+    quick_token?: string
+  }): Promise<EvaluatorUser> {
+    const defaultPassword = data.password && data.password.length >= 8 ? data.password : 'Skip@Pass'
+    const token =
+      data.quick_token?.trim() ||
+      data.email
+        .split('@')[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '') ||
+      `eval${Math.floor(Math.random() * 9000 + 1000)}`
+
+    const userRecord = await pb.collection('users').create<EvaluatorUser>({
+      email: data.email.trim(),
+      password: defaultPassword,
+      passwordConfirm: defaultPassword,
+      name: data.name.trim(),
+      role: 'evaluator',
+      is_active: true,
+      quick_token: token,
+      emailVisibility: false,
+    })
+
+    return userRecord
+  },
+
+  async update(
+    id: string,
+    data: {
+      name?: string
+      email?: string
+      is_active?: boolean
+      quick_token?: string
+      password?: string
+    },
+  ): Promise<EvaluatorUser> {
+    const payload: Record<string, any> = {}
+    if (data.name !== undefined) payload.name = data.name.trim()
+    if (data.email !== undefined) payload.email = data.email.trim()
+    if (data.is_active !== undefined) payload.is_active = data.is_active
+    if (data.quick_token !== undefined) payload.quick_token = data.quick_token.trim()
+    if (data.password && data.password.length >= 8) {
+      payload.password = data.password
+      payload.passwordConfirm = data.password
+    }
+    return await pb.collection('users').update<EvaluatorUser>(id, payload)
+  },
+
+  async toggleActive(id: string, currentState: boolean): Promise<EvaluatorUser> {
+    return await pb.collection('users').update<EvaluatorUser>(id, {
+      is_active: !currentState,
+    })
+  },
+
+  async resetPassword(id: string, newPassword = 'Skip@Pass'): Promise<EvaluatorUser> {
+    return await pb.collection('users').update<EvaluatorUser>(id, {
+      password: newPassword,
+      passwordConfirm: newPassword,
+    })
+  },
+}
 
 export const startupsService = {
   async getAll(): Promise<Startup[]> {
@@ -115,10 +198,11 @@ export const auditLogsService = {
   async log(action: string, details?: string, startupName?: string): Promise<AuditLog | null> {
     try {
       const user = pb.authStore.record
+      const email = user?.email || (pb.authStore.model as any)?.email || 'público / anônimo'
       return await pb.collection('audit_logs').create<AuditLog>({
         action,
         details: details || '',
-        user_email: user?.email || 'público / anônimo',
+        user_email: email,
         startup_name: startupName || '',
       })
     } catch (e) {

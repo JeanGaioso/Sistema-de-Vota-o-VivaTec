@@ -8,6 +8,8 @@ export interface UserProfile {
   name: string
   role: 'admin' | 'evaluator'
   avatar?: string
+  is_active?: boolean
+  quick_token?: string
 }
 
 interface AuthContextType {
@@ -35,13 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (pb.authStore.isValid && model) {
       const email = model.email || ''
       const isAdminUser =
-        email.toLowerCase().includes('admin') || email.toLowerCase() === 'jeangaioso@gmail.com'
+        model.role === 'admin' ||
+        email.toLowerCase().includes('admin') ||
+        email.toLowerCase() === 'jeangaioso@gmail.com'
       setUser({
         id: model.id,
         email: email,
         name: model.name || (isAdminUser ? 'Comissão Organizadora (Admin)' : 'Avaliador da Banca'),
         role: isAdminUser ? 'admin' : 'evaluator',
         avatar: model.avatar,
+        is_active: model.is_active !== false,
+        quick_token: model.quick_token || '',
       })
     } else {
       setUser(null)
@@ -62,7 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password = 'Skip@Pass'): Promise<boolean> => {
     try {
       setIsLoading(true)
-      await pb.collection('users').authWithPassword(email.trim(), password)
+      const authData = await pb.collection('users').authWithPassword(email.trim(), password)
+      // Checar se usuário está desativado
+      if (authData.record && authData.record.is_active === false) {
+        pb.authStore.clear()
+        setUser(null)
+        setRawModel(null)
+        setIsLoading(false)
+        console.warn('Acesso negado: avaliador desativado pela comissão.')
+        return false
+      }
       updateUserFromStore()
       return true
     } catch (error) {
@@ -82,7 +97,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return await login(clean, 'Skip@Pass')
     }
 
-    // Se for token predefinido ou identificador curto de jurado
+    // Tentar buscar usuário no PocketBase por quick_token dinâmico
+    try {
+      const records = await pb.collection('users').getFullList({
+        filter: `quick_token = "${clean.toLowerCase()}" || quick_token = "${clean}"`,
+      })
+      if (records.length > 0 && records[0].email) {
+        if (records[0].is_active === false) {
+          console.warn('Acesso negado: avaliador desativado pela comissão.')
+          return false
+        }
+        return await login(records[0].email, 'Skip@Pass')
+      }
+    } catch (err) {
+      console.warn('Busca por quick_token falhou, usando fallback:', err)
+    }
+
+    // Se for token predefinido ou identificador curto de jurado (fallback)
     const tokenMap: Record<string, string> = {
       admin: 'jeangaioso@gmail.com',
       'sesc-admin': 'jeangaioso@gmail.com',

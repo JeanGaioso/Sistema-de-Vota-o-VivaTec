@@ -7,6 +7,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import Index from './pages/Index'
 import EvaluatorPage from './pages/EvaluatorPage'
 import AdminPage from './pages/AdminPage'
+import ReportPage from './pages/ReportPage'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
 
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/avaliar" element={<EvaluatorPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/relatorio" element={<ReportPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

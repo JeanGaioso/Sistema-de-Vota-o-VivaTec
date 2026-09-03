@@ -16,6 +16,7 @@ import {
   Layers,
   Menu,
   X,
+  FileText,
 } from 'lucide-react'
 import { VivaTecLogo } from './VivaTecLogo'
 import { useRealtime } from '@/hooks/use-realtime'
@@ -85,20 +86,37 @@ export default function Layout() {
 
             {/* Link para Admin */}
             {isAdmin && (
-              <Link to="/admin">
-                <Button
-                  variant={location.pathname.startsWith('/admin') ? 'default' : 'ghost'}
-                  size="sm"
-                  className={`font-bold rounded-xl text-xs h-9.5 transition-all ${
-                    location.pathname.startsWith('/admin')
-                      ? 'bg-[#E11D74] text-white hover:bg-[#BE185D] shadow-sm'
-                      : 'text-[#1A1A1A] hover:bg-pink-50 hover:text-[#E11D74]'
-                  }`}
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
-                  Comissão (Admin)
-                </Button>
-              </Link>
+              <>
+                <Link to="/admin">
+                  <Button
+                    variant={location.pathname === '/admin' ? 'default' : 'ghost'}
+                    size="sm"
+                    className={`font-bold rounded-xl text-xs h-9.5 transition-all ${
+                      location.pathname === '/admin'
+                        ? 'bg-[#E11D74] text-white hover:bg-[#BE185D] shadow-sm'
+                        : 'text-[#1A1A1A] hover:bg-pink-50 hover:text-[#E11D74]'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
+                    Comissão (Admin)
+                  </Button>
+                </Link>
+
+                <Link to="/relatorio">
+                  <Button
+                    variant={location.pathname.startsWith('/relatorio') ? 'default' : 'ghost'}
+                    size="sm"
+                    className={`font-bold rounded-xl text-xs h-9.5 transition-all ${
+                      location.pathname.startsWith('/relatorio')
+                        ? 'bg-[#E11D74] text-white hover:bg-[#BE185D] shadow-sm'
+                        : 'text-[#1A1A1A] hover:bg-pink-50 hover:text-[#E11D74]'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 mr-1.5" />
+                    Relatório Pós-Evento
+                  </Button>
+                </Link>
+              </>
             )}
           </nav>
 
@@ -204,17 +222,31 @@ export default function Layout() {
             )}
 
             {isAdmin && (
-              <Link
-                to="/admin"
-                className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
-                  location.pathname.startsWith('/admin')
-                    ? 'bg-[#E11D74] text-white'
-                    : 'text-[#1A1A1A] hover:bg-pink-50'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                Painel da Comissão (Admin)
-              </Link>
+              <>
+                <Link
+                  to="/admin"
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
+                    location.pathname === '/admin'
+                      ? 'bg-[#E11D74] text-white'
+                      : 'text-[#1A1A1A] hover:bg-pink-50'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Painel da Comissão (Admin)
+                </Link>
+
+                <Link
+                  to="/relatorio"
+                  className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
+                    location.pathname.startsWith('/relatorio')
+                      ? 'bg-[#E11D74] text-white'
+                      : 'text-[#1A1A1A] hover:bg-pink-50'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  Relatório Pós-Evento (PDF)
+                </Link>
+              </>
             )}
 
             {!isAuthenticated && (
@@ -263,15 +295,27 @@ export default function Layout() {
         )}
 
         {isAdmin && (
-          <Link
-            to="/admin"
-            className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${
-              location.pathname.startsWith('/admin') ? 'text-[#E11D74]' : 'text-slate-500'
-            }`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            <span>Admin</span>
-          </Link>
+          <>
+            <Link
+              to="/admin"
+              className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${
+                location.pathname === '/admin' ? 'text-[#E11D74]' : 'text-slate-500'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5" />
+              <span>Admin</span>
+            </Link>
+
+            <Link
+              to="/relatorio"
+              className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${
+                location.pathname.startsWith('/relatorio') ? 'text-[#E11D74]' : 'text-slate-500'
+              }`}
+            >
+              <FileText className="w-5 h-5" />
+              <span>Relatório</span>
+            </Link>
+          </>
         )}
 
         {!isAuthenticated && (

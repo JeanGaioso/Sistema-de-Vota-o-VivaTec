@@ -5,8 +5,9 @@ import {
   evaluationsService,
   settingsService,
   auditLogsService,
+  evaluatorsService,
 } from '@/services/api'
-import { Startup, Evaluation, AuditLog, StartupRankResult, ESGPillar } from '@/types'
+import { Startup, Evaluation, AuditLog, StartupRankResult, ESGPillar, EvaluatorUser } from '@/types'
 import { calculateRanking, getFileUrl } from '@/lib/ranking'
 import { useRealtime } from '@/hooks/use-realtime'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { EvaluatorModal } from '@/components/EvaluatorModal'
+import { EvaluatorQRCodeModal } from '@/components/EvaluatorQRCodeModal'
+import { PostEventReportView } from '@/components/PostEventReportView'
 import {
   LayoutDashboard,
   Trophy,
@@ -50,6 +54,12 @@ import {
   RefreshCw,
   FileCheck,
   Zap,
+  UserCheck,
+  QrCode,
+  Power,
+  KeyRound,
+  FileText,
+  Download,
 } from 'lucide-react'
 
 export default function AdminPage() {
@@ -58,6 +68,7 @@ export default function AdminPage() {
 
   const [startups, setStartups] = useState<Startup[]>([])
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
+  const [evaluators, setEvaluators] = useState<EvaluatorUser[]>([])
   const [settingsStatus, setSettingsStatus] = useState<'waiting' | 'published'>('waiting')
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +79,12 @@ export default function AdminPage() {
   const [penaltyModalOpen, setPenaltyModalOpen] = useState(false)
   const [selectedForPenalty, setSelectedForPenalty] = useState<Startup | null>(null)
   const [penaltyValue, setPenaltyValue] = useState<number>(0)
+
+  // Modais de Jurados
+  const [evaluatorModalOpen, setEvaluatorModalOpen] = useState(false)
+  const [editingEvaluator, setEditingEvaluator] = useState<EvaluatorUser | null>(null)
+  const [qrCodeModalOpen, setQrCodeModalOpen] = useState(false)
+  const [selectedEvaluatorForQr, setSelectedEvaluatorForQr] = useState<EvaluatorUser | null>(null)
 
   const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [unpublishModalOpen, setUnpublishModalOpen] = useState(false)
@@ -85,16 +102,22 @@ export default function AdminPage() {
 
   const fetchAllAdminData = async () => {
     try {
-      const [startupsList, evalsList, status, logs] = await Promise.all([
+      const [startupsList, evalsList, status, logs, evalsUsers] = await Promise.all([
         startupsService.getAll(),
         evaluationsService.getAll(),
         settingsService.getStatus(),
         auditLogsService.getAll(),
+        evaluatorsService.getAllUsers(),
       ])
       setStartups(startupsList)
       setEvaluations(evalsList)
       setSettingsStatus(status)
       setAuditLogs(logs)
+      // Filtrar apenas avaliadores (ou usuários com role = evaluator)
+      const jurados = evalsUsers.filter(
+        (u) => u.role === 'evaluator' || u.email.includes('evaluator') || u.role !== 'admin',
+      )
+      setEvaluators(jurados)
     } catch (err) {
       console.error('Erro ao buscar dados do admin:', err)
     } finally {
@@ -113,6 +136,9 @@ export default function AdminPage() {
     fetchAllAdminData()
   })
   useRealtime('audit_logs', () => {
+    fetchAllAdminData()
+  })
+  useRealtime('users', () => {
     fetchAllAdminData()
   })
 
@@ -322,6 +348,84 @@ export default function AdminPage() {
     }
   }
 
+  // Ações de Gestão de Jurados
+  const handleOpenAddEvaluator = () => {
+    setEditingEvaluator(null)
+    setEvaluatorModalOpen(true)
+  }
+
+  const handleOpenEditEvaluator = (evaluator: EvaluatorUser) => {
+    setEditingEvaluator(evaluator)
+    setEvaluatorModalOpen(true)
+  }
+
+  const handleOpenQrCode = (evaluator: EvaluatorUser) => {
+    setSelectedEvaluatorForQr(evaluator)
+    setQrCodeModalOpen(true)
+  }
+
+  const handleToggleActiveEvaluator = async (evaluator: EvaluatorUser) => {
+    const nextState = !evaluator.is_active
+    const actionLabel = nextState ? 'Ativar' : 'Desativar'
+    if (
+      !window.confirm(
+        `Tem certeza que deseja ${actionLabel} o acesso do avaliador "${evaluator.name}"? ${
+          !nextState
+            ? 'O avaliador não conseguirá logar, mas todas as notas atribuídas serão mantidas.'
+            : ''
+        }`,
+      )
+    ) {
+      return
+    }
+
+    try {
+      await evaluatorsService.toggleActive(evaluator.id, evaluator.is_active !== false)
+      await auditLogsService.log(
+        nextState ? 'JURADO_ATIVADO' : 'JURADO_DESATIVADO',
+        `A comissão ${actionLabel.toLowerCase()}ou o jurado ${evaluator.name} (${evaluator.email}).`,
+      )
+      toast({
+        title: `Jurado ${nextState ? 'Ativado' : 'Desativado'}`,
+        description: nextState
+          ? 'O avaliador já pode acessar a banca novamente.'
+          : 'Acesso bloqueado sem afetar notas passadas.',
+      })
+      fetchAllAdminData()
+    } catch (err) {
+      console.error('Erro ao alternar status do avaliador:', err)
+      toast({
+        title: 'Erro ao Alterar Status',
+        description: 'Não foi possível atualizar o status do jurado.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleResetEvaluatorPassword = async (evaluator: EvaluatorUser) => {
+    if (
+      !window.confirm(
+        `Deseja redefinir a senha do jurado "${evaluator.name}" para a senha padrão "Skip@Pass"?`,
+      )
+    ) {
+      return
+    }
+    try {
+      await evaluatorsService.resetPassword(evaluator.id, 'Skip@Pass')
+      await auditLogsService.log(
+        'SENHA_JURADO_REDEFINIDA',
+        `A comissão redefiniu a senha do jurado ${evaluator.name} para o padrão do evento.`,
+      )
+      toast({
+        title: 'Senha Redefinida!',
+        description: 'A senha padrão Skip@Pass foi restabelecida com sucesso.',
+      })
+      fetchAllAdminData()
+    } catch (err) {
+      console.error('Erro ao redefinir senha:', err)
+    }
+  }
+
   if (!isAuthenticated || !isAdmin) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto min-h-[60vh]">
@@ -407,12 +511,12 @@ export default function AdminPage() {
 
         <Card className="p-5 rounded-2xl border-2 border-slate-200 bg-white shadow-xs">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-            Pareceres da Banca
+            Jurados da Banca
           </span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-black text-emerald-700">{evaluations.length}</span>
+            <span className="text-3xl font-black text-emerald-700">{evaluators.length}</span>
             <span className="text-xs text-slate-500 font-medium">
-              ({evaluations.filter((e) => e.is_finalized).length} finalizados)
+              ({evaluators.filter((ev) => ev.is_active !== false).length} ativos)
             </span>
           </div>
         </Card>
@@ -446,7 +550,7 @@ export default function AdminPage() {
 
       {/* TABS DO ADMIN: Monitor de Ranking, Gestão de Startups, Avaliações Individuais, Logs de Auditoria */}
       <Tabs defaultValue="monitor" className="w-full space-y-6">
-        <TabsList className="bg-slate-200/80 p-1.5 rounded-2xl grid grid-cols-2 sm:grid-cols-4 w-full">
+        <TabsList className="bg-slate-200/80 p-1.5 rounded-2xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 w-full gap-1">
           <TabsTrigger
             value="monitor"
             className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
@@ -454,20 +558,26 @@ export default function AdminPage() {
             <Trophy className="w-4 h-4 mr-1.5 inline" /> Monitor & Ranking
           </TabsTrigger>
           <TabsTrigger
+            value="evaluators"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
+            <UserCheck className="w-4 h-4 mr-1.5 inline" /> Jurados da Banca
+          </TabsTrigger>
+          <TabsTrigger
+            value="report"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
+            <FileText className="w-4 h-4 mr-1.5 inline" /> Relatório Pós-Evento
+          </TabsTrigger>
+          <TabsTrigger
             value="startups"
             className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
           >
-            <Users className="w-4 h-4 mr-1.5 inline" /> Startups & Estudantes
-          </TabsTrigger>
-          <TabsTrigger
-            value="evaluations"
-            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
-          >
-            <FileCheck className="w-4 h-4 mr-1.5 inline" /> Avaliações da Banca
+            <Users className="w-4 h-4 mr-1.5 inline" /> Startups & Equipes
           </TabsTrigger>
           <TabsTrigger
             value="audit"
-            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white col-span-2 sm:col-span-1"
           >
             <History className="w-4 h-4 mr-1.5 inline" /> Auditoria & Logs
           </TabsTrigger>
@@ -795,7 +905,180 @@ export default function AdminPage() {
           </div>
         </TabsContent>
 
-        {/* TAB 4: AUDITORIA E LOGS DO SISTEMA */}
+        {/* TAB 2: GESTÃO DE JURADOS DA BANCA (PENDÊNCIA 1) */}
+        <TabsContent value="evaluators" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-black text-[#1A1A1A]">
+                Gestão dos Jurados da Banca Examinadora
+              </h3>
+              <p className="text-xs text-slate-500">
+                Cadastre novos avaliadores, gere QR Codes/tokens de acesso rápido, edite dados e
+                ative ou desative credenciais mantendo a integridade das avaliações já salvas.
+              </p>
+            </div>
+            <Button
+              onClick={handleOpenAddEvaluator}
+              className="bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Cadastrar Novo Jurado
+            </Button>
+          </div>
+
+          <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 text-[11px] font-extrabold text-slate-600 uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th className="py-3.5 px-4">Avaliador (Nome)</th>
+                    <th className="py-3.5 px-4">E-mail Institucional</th>
+                    <th className="py-3.5 px-4 text-center">Código / Token Rápido</th>
+                    <th className="py-3.5 px-4 text-center">Status</th>
+                    <th className="py-3.5 px-4 text-center">Avaliações Feitas</th>
+                    <th className="py-3.5 px-4 text-center">Ações & Acesso</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {evaluators.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-slate-500 italic">
+                        Nenhum avaliador cadastrado ainda. Clique em "Cadastrar Novo Jurado" acima.
+                      </td>
+                    </tr>
+                  ) : (
+                    evaluators.map((ev) => {
+                      const evalsCount = evaluations.filter((e) => e.evaluator === ev.id).length
+                      const isActive = ev.is_active !== false
+
+                      return (
+                        <tr
+                          key={ev.id}
+                          className={`hover:bg-pink-50/30 transition-colors ${
+                            !isActive ? 'opacity-60 bg-slate-50' : ''
+                          }`}
+                        >
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-[#E11D74] text-white flex items-center justify-center font-bold text-xs">
+                                {ev.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-bold text-[#1A1A1A] block">{ev.name}</span>
+                                <span className="text-[10px] text-slate-400">
+                                  ID: {ev.id.substring(0, 8)}...
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-4 px-4">
+                            <span className="text-xs text-slate-700 font-medium">{ev.email}</span>
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[#E11D74]">
+                              {ev.quick_token || ev.email.split('@')[0]}
+                            </span>
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            {isActive ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />{' '}
+                                Ativo
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">
+                                Desativado
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            <span className="text-xs font-bold text-slate-800">{evalsCount}</span>
+                            <span className="text-[10px] text-slate-400 block">
+                              de {startups.length} startups
+                            </span>
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {/* Botão QR Code & Token */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenQrCode(ev)}
+                                className="h-8 px-2.5 rounded-lg text-xs font-bold border-pink-200 hover:bg-pink-50 text-[#E11D74]"
+                                title="Visualizar QR Code e credencial de login rápido"
+                              >
+                                <QrCode className="w-3.5 h-3.5 mr-1" />
+                                <span>QR / Token</span>
+                              </Button>
+
+                              {/* Botão Editar Dados Básicos */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenEditEvaluator(ev)}
+                                className="h-8 px-2.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100"
+                                title="Editar nome, e-mail ou redefinir senha"
+                              >
+                                <Edit className="w-3.5 h-3.5 mr-1" />
+                                <span>Editar</span>
+                              </Button>
+
+                              {/* Botão Redefinir Senha */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleResetEvaluatorPassword(ev)}
+                                className="h-8 px-2 rounded-lg text-xs font-bold text-slate-500 hover:text-amber-700 hover:bg-amber-50"
+                                title="Redefinir senha para Skip@Pass"
+                              >
+                                <KeyRound className="w-3.5 h-3.5" />
+                              </Button>
+
+                              {/* Botão Ativar / Desativar */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleActiveEvaluator(ev)}
+                                className={`h-8 px-2.5 rounded-lg text-xs font-bold ${
+                                  isActive
+                                    ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
+                                    : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
+                                }`}
+                                title={
+                                  isActive
+                                    ? 'Desativar avaliador (impede login sem apagar avaliações)'
+                                    : 'Reativar avaliador'
+                                }
+                              >
+                                <Power className="w-3.5 h-3.5 mr-1" />
+                                <span>{isActive ? 'Desativar' : 'Ativar'}</span>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* TAB 3: RELATÓRIO PÓS-EVENTO & EXPORTAÇÃO PDF (PENDÊNCIAS 2 & 3) */}
+        <TabsContent value="report" className="space-y-4">
+          <PostEventReportView
+            ranking={ranking}
+            eventName="Festival de Apresentação Artística de Heróis Fictícios • Viva Tec"
+            generatedBy={user?.name || 'Comissão Organizadora Sesc/Senac'}
+          />
+        </TabsContent>
+
+        {/* TAB 5: AUDITORIA E LOGS DO SISTEMA */}
         <TabsContent value="audit" className="space-y-4">
           <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md p-6 space-y-4">
             <div>
@@ -1099,6 +1382,21 @@ export default function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* MODAL DE CADASTRO/EDIÇÃO DE JURADO (PENDÊNCIA 1) */}
+      <EvaluatorModal
+        isOpen={evaluatorModalOpen}
+        onClose={() => setEvaluatorModalOpen(false)}
+        evaluator={editingEvaluator}
+        onSuccess={fetchAllAdminData}
+      />
+
+      {/* MODAL DE QR CODE E TOKEN DE ACESSO DO JURADO (PENDÊNCIA 1) */}
+      <EvaluatorQRCodeModal
+        isOpen={qrCodeModalOpen}
+        onClose={() => setQrCodeModalOpen(false)}
+        evaluator={selectedEvaluatorForQr}
+      />
     </div>
   )
 }

@@ -31,7 +31,7 @@ import {
 } from 'lucide-react'
 
 export default function EvaluatorPage() {
-  const { user, isAuthenticated, isEvaluator, isAdmin } = useAuth()
+  const { user, isAuthenticated, isEvaluator, isAdmin, loginWithTokenOrQuickAccess } = useAuth()
   const { toast } = useToast()
 
   const [startups, setStartups] = useState<Startup[]>([])
@@ -71,6 +71,28 @@ export default function EvaluatorPage() {
       setLoading(false)
     }
   }
+
+  // Auto-login via parâmetro ?token=... na URL (usado pelo QR Code da banca)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const tokenParam = params.get('token')
+    if (tokenParam && !isAuthenticated) {
+      const doAutoLogin = async () => {
+        try {
+          const success = await loginWithTokenOrQuickAccess(tokenParam)
+          if (success) {
+            toast({
+              title: 'Acesso Rápido da Banca!',
+              description: 'Login realizado com sucesso via QR Code.',
+            })
+          }
+        } catch (e) {
+          console.warn('Falha no auto-login:', e)
+        }
+      }
+      doAutoLogin()
+    }
+  }, [])
 
   useEffect(() => {
     if (isAuthenticated) {
