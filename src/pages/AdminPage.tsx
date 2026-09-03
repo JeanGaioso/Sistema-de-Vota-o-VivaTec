@@ -35,6 +35,7 @@ import { useToast } from '@/hooks/use-toast'
 import { EvaluatorModal } from '@/components/EvaluatorModal'
 import { EvaluatorQRCodeModal } from '@/components/EvaluatorQRCodeModal'
 import { PostEventReportView } from '@/components/PostEventReportView'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import {
   LayoutDashboard,
   Trophy,
@@ -279,9 +280,10 @@ export default function AdminPage() {
       fetchAllAdminData()
     } catch (err) {
       console.error('Erro ao salvar startup:', err)
+      const errorMsg = getErrorMessage(err)
       toast({
-        title: 'Erro ao Salvar',
-        description: 'Verifique os dados da startup.',
+        title: 'Erro ao Salvar Startup',
+        description: errorMsg || 'Verifique os dados da startup.',
         variant: 'destructive',
       })
     } finally {
@@ -303,7 +305,13 @@ export default function AdminPage() {
       toast({ title: 'Startup Removida' })
       fetchAllAdminData()
     } catch (err) {
-      console.error('Erro ao excluir:', err)
+      console.error('Erro ao excluir startup:', err)
+      const errorMsg = getErrorMessage(err)
+      toast({
+        title: 'Erro ao Excluir Startup',
+        description: errorMsg || 'Não foi possível excluir a startup.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -394,9 +402,43 @@ export default function AdminPage() {
       fetchAllAdminData()
     } catch (err) {
       console.error('Erro ao alternar status do avaliador:', err)
+      const errorMsg = getErrorMessage(err)
       toast({
         title: 'Erro ao Alterar Status',
-        description: 'Não foi possível atualizar o status do jurado.',
+        description: errorMsg || 'Não foi possível atualizar o status do jurado.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteEvaluator = async (evaluator: EvaluatorUser) => {
+    const evalsCount = evaluations.filter((e) => e.evaluator === evaluator.id).length
+    const warning =
+      evalsCount > 0
+        ? `Atenção: este jurado possui ${evalsCount} avaliação(ões) registrada(s). Se preferir mantê-las, utilize a opção "Desativar" em vez de excluir.\n\nDeseja realmente excluir permanentemente o jurado "${evaluator.name}"?`
+        : `Tem certeza que deseja excluir o jurado "${evaluator.name}"?`
+
+    if (!window.confirm(warning)) {
+      return
+    }
+
+    try {
+      await evaluatorsService.delete(evaluator.id)
+      await auditLogsService.log(
+        'JURADO_EXCLUIDO',
+        `Jurado ${evaluator.name} (${evaluator.email}) excluído pela comissão.`,
+      )
+      toast({
+        title: 'Jurado Excluído',
+        description: `O jurado "${evaluator.name}" foi removido do sistema.`,
+      })
+      fetchAllAdminData()
+    } catch (err) {
+      console.error('Erro ao excluir jurado:', err)
+      const errorMsg = getErrorMessage(err)
+      toast({
+        title: 'Erro ao Excluir Jurado',
+        description: errorMsg || 'Não foi possível excluir o jurado.',
         variant: 'destructive',
       })
     }
@@ -405,24 +447,30 @@ export default function AdminPage() {
   const handleResetEvaluatorPassword = async (evaluator: EvaluatorUser) => {
     if (
       !window.confirm(
-        `Deseja redefinir a senha do jurado "${evaluator.name}" para a senha padrão "Skip@Pass"?`,
+        `Deseja redefinir a senha do jurado "${evaluator.name}" para a senha padrão "Vivatec@2026"?`,
       )
     ) {
       return
     }
     try {
-      await evaluatorsService.resetPassword(evaluator.id, 'Skip@Pass')
+      await evaluatorsService.resetPassword(evaluator.id, 'Vivatec@2026')
       await auditLogsService.log(
         'SENHA_JURADO_REDEFINIDA',
         `A comissão redefiniu a senha do jurado ${evaluator.name} para o padrão do evento.`,
       )
       toast({
         title: 'Senha Redefinida!',
-        description: 'A senha padrão Skip@Pass foi restabelecida com sucesso.',
+        description: 'A senha padrão Vivatec@2026 foi restabelecida com sucesso.',
       })
       fetchAllAdminData()
     } catch (err) {
       console.error('Erro ao redefinir senha:', err)
+      const errorMsg = getErrorMessage(err)
+      toast({
+        title: 'Erro ao Redefinir Senha',
+        description: errorMsg || 'Não foi possível redefinir a senha do jurado.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -1033,7 +1081,7 @@ export default function AdminPage() {
                                 size="sm"
                                 onClick={() => handleResetEvaluatorPassword(ev)}
                                 className="h-8 px-2 rounded-lg text-xs font-bold text-slate-500 hover:text-amber-700 hover:bg-amber-50"
-                                title="Redefinir senha para Skip@Pass"
+                                title="Redefinir senha para Vivatec@2026"
                               >
                                 <KeyRound className="w-3.5 h-3.5" />
                               </Button>
@@ -1045,7 +1093,7 @@ export default function AdminPage() {
                                 onClick={() => handleToggleActiveEvaluator(ev)}
                                 className={`h-8 px-2.5 rounded-lg text-xs font-bold ${
                                   isActive
-                                    ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
+                                    ? 'text-amber-700 hover:bg-amber-50'
                                     : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
                                 }`}
                                 title={
@@ -1056,6 +1104,17 @@ export default function AdminPage() {
                               >
                                 <Power className="w-3.5 h-3.5 mr-1" />
                                 <span>{isActive ? 'Desativar' : 'Ativar'}</span>
+                              </Button>
+
+                              {/* Botão Excluir Avaliador */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteEvaluator(ev)}
+                                className="h-8 px-2 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700"
+                                title="Excluir jurado permanentemente"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
                           </td>

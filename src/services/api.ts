@@ -25,7 +25,8 @@ export const evaluatorsService = {
     password?: string
     quick_token?: string
   }): Promise<EvaluatorUser> {
-    const defaultPassword = data.password && data.password.length >= 8 ? data.password : 'Skip@Pass'
+    const defaultPassword =
+      data.password && data.password.length >= 8 ? data.password : 'Vivatec@2026'
     const token =
       data.quick_token?.trim() ||
       data.email
@@ -76,11 +77,15 @@ export const evaluatorsService = {
     })
   },
 
-  async resetPassword(id: string, newPassword = 'Skip@Pass'): Promise<EvaluatorUser> {
+  async resetPassword(id: string, newPassword = 'Vivatec@2026'): Promise<EvaluatorUser> {
     return await pb.collection('users').update<EvaluatorUser>(id, {
       password: newPassword,
       passwordConfirm: newPassword,
     })
+  },
+
+  async delete(id: string): Promise<boolean> {
+    return await pb.collection('users').delete(id)
   },
 }
 

@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const login = async (email: string, password = 'Skip@Pass'): Promise<boolean> => {
+  const login = async (email: string, password = 'Vivatec@2026'): Promise<boolean> => {
     try {
       setIsLoading(true)
       const authData = await pb.collection('users').authWithPassword(email.trim(), password)
@@ -94,6 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Se for email direto
     if (clean.includes('@')) {
+      // Tenta login com a senha padrão nova (Vivatec@2026); se falhar tenta a legada (Skip@Pass)
+      const ok = await login(clean, 'Vivatec@2026')
+      if (ok) return true
       return await login(clean, 'Skip@Pass')
     }
 
@@ -107,6 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.warn('Acesso negado: avaliador desativado pela comissão.')
           return false
         }
+        const ok = await login(records[0].email, 'Vivatec@2026')
+        if (ok) return true
         return await login(records[0].email, 'Skip@Pass')
       }
     } catch (err) {
@@ -127,10 +132,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const mappedEmail = tokenMap[clean.toLowerCase()]
     if (mappedEmail) {
+      const ok = await login(mappedEmail, 'Vivatec@2026')
+      if (ok) return true
       return await login(mappedEmail, 'Skip@Pass')
     }
 
     // Tentar autenticar com senha padrão
+    const ok = await login(clean, 'Vivatec@2026')
+    if (ok) return true
     return await login(clean, 'Skip@Pass')
   }
 

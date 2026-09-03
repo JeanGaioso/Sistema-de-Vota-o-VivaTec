@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast'
 import { evaluatorsService, auditLogsService } from '@/services/api'
 import { EvaluatorUser } from '@/types'
 import { UserPlus, Edit3, KeyRound, ShieldAlert } from 'lucide-react'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 
 interface EvaluatorModalProps {
   isOpen: boolean
@@ -43,7 +44,7 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
       setName('')
       setEmail('')
       setQuickToken('')
-      setPassword('Skip@Pass')
+      setPassword('Vivatec@2026')
     }
   }, [evaluator, isOpen])
 
@@ -79,7 +80,7 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
         await evaluatorsService.create({
           name: name.trim(),
           email: email.trim(),
-          password: password.trim() || 'Skip@Pass',
+          password: password.trim() || 'Vivatec@2026',
           quick_token: quickToken.trim(),
         })
         await auditLogsService.log(
@@ -95,13 +96,10 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
       onClose()
     } catch (err: any) {
       console.error('Erro ao salvar jurado:', err)
-      const errorDetail =
-        err?.data?.data?.email?.message ||
-        err?.message ||
-        'Verifique se o e-mail já está cadastrado.'
+      const errorDetail = getErrorMessage(err)
       toast({
-        title: 'Erro ao Salvar Avaliador',
-        description: errorDetail,
+        title: isEditing ? 'Erro ao Atualizar Avaliador' : 'Erro ao Cadastrar Avaliador',
+        description: errorDetail || 'Verifique se o e-mail já está cadastrado.',
         variant: 'destructive',
       })
     } finally {
@@ -172,14 +170,14 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
             <Input
               type="text"
               placeholder={
-                isEditing ? 'Manter senha atual' : 'Padrão: Skip@Pass (mín. 8 caracteres)'
+                isEditing ? 'Manter senha atual' : 'Padrão: Vivatec@2026 (mín. 8 caracteres)'
               }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="h-10 rounded-xl border-slate-300"
             />
             <span className="text-[10px] text-slate-400 block">
-              Mínimo de 8 caracteres. Senha padrão do evento: <code>Skip@Pass</code>
+              Mínimo de 8 caracteres. Senha padrão do evento: <code>Vivatec@2026</code>
             </span>
           </div>
 
