@@ -65,11 +65,17 @@ export function EvaluatorQRCodeModal({ isOpen, onClose, evaluator }: EvaluatorQR
             <QrCode className="w-6 h-6 text-[#E11D74]" />
           </div>
           <DialogTitle className="text-xl font-black text-[#1A1A1A]">
-            Acesso Rápido da Banca
+            {evaluator.role === 'organizer' ? 'Acesso Rápido - Comissão' : 'Acesso Rápido da Banca'}
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-500">
             Credencial e QR Code exclusivo para{' '}
             <strong className="text-[#E11D74]">{evaluator.name}</strong>
+            {evaluator.role === 'organizer' && (
+              <span className="block mt-0.5 text-[11px] text-slate-400">
+                Membro da Comissão Organizadora
+                {evaluator.is_evaluator ? ' • Condição de Avaliador Ativa' : ' • Administrativo'}
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -116,7 +122,7 @@ export function EvaluatorQRCodeModal({ isOpen, onClose, evaluator }: EvaluatorQR
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
               <div className="overflow-hidden mr-2">
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                  E-mail do Avaliador
+                  E-mail de Acesso
                 </span>
                 <span className="text-xs font-semibold text-slate-800 truncate block">
                   {evaluator.email}
@@ -140,8 +146,8 @@ export function EvaluatorQRCodeModal({ isOpen, onClose, evaluator }: EvaluatorQR
             <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-800 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>
-                Permite login instantâneo na cabine da banca examinadora sem necessidade de digitar
-                senhas complexas.
+                Permite login instantâneo no sistema sem necessidade de digitar senhas complexas no
+                dia do evento.
               </span>
             </div>
           </div>

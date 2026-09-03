@@ -66,8 +66,8 @@ export default function Layout() {
               </Button>
             </Link>
 
-            {/* Link para Avaliador */}
-            {(isEvaluator || isAdmin) && (
+            {/* Link para Avaliador - apenas se tiver condição de avaliador ativa */}
+            {isEvaluator && (
               <Link to="/avaliar">
                 <Button
                   variant={location.pathname.startsWith('/avaliar') ? 'default' : 'ghost'}
@@ -148,7 +148,13 @@ export default function Layout() {
                     {user.name.split(' ')[0]}
                   </span>
                   <span className="text-[10px] text-[#E11D74] font-bold">
-                    {user.role === 'admin' ? 'Comissão Senac/Sesc' : 'Banca Avaliadora'}
+                    {user.role === 'admin'
+                      ? 'Admin Geral'
+                      : user.role === 'organizer'
+                        ? user.is_evaluator
+                          ? 'Comissão & Banca'
+                          : 'Comissão Organizadora'
+                        : 'Banca Avaliadora'}
                   </span>
                 </div>
 
@@ -207,7 +213,7 @@ export default function Layout() {
               Vitrine de Vencedores
             </Link>
 
-            {(isEvaluator || isAdmin) && (
+            {isEvaluator && (
               <Link
                 to="/avaliar"
                 className={`flex items-center gap-2 p-2.5 rounded-xl text-sm font-bold ${
@@ -282,7 +288,7 @@ export default function Layout() {
           <span>Vitrine</span>
         </Link>
 
-        {(isEvaluator || isAdmin) && (
+        {isEvaluator && (
           <Link
             to="/avaliar"
             className={`flex flex-col items-center gap-1 text-[11px] font-bold py-1 px-3 rounded-lg ${

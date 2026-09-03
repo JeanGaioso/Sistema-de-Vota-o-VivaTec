@@ -10,10 +10,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useNavigate } from 'react-router-dom'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Shield, KeyRound, Sparkles, UserCheck, AlertCircle } from 'lucide-react'
+import { Shield, KeyRound, Sparkles, UserCheck, AlertCircle, Users } from 'lucide-react'
 import { VivaTecLogo } from './VivaTecLogo'
 import { useToast } from '@/hooks/use-toast'
+import pb from '@/lib/pocketbase/client'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -24,12 +26,27 @@ interface LoginModalProps {
 export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModalProps) {
   const { login, loginWithTokenOrQuickAccess } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   const [quickToken, setQuickToken] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+
+  const handlePostLoginRedirect = () => {
+    const model = pb.authStore.model
+    if (!model) return
+    const isSuperAdmin =
+      model.role === 'admin' || model.email?.toLowerCase() === 'jeangaioso@gmail.com'
+    const isOrg = model.role === 'organizer'
+
+    if (isSuperAdmin || isOrg) {
+      navigate('/admin')
+    } else {
+      navigate('/avaliar')
+    }
+  }
 
   const handleQuickLogin = async (tokenValue: string) => {
     setLoading(true)
@@ -42,8 +59,9 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
         description: 'Bem-vindo(a) à plataforma Viva Tec.',
       })
       onClose()
+      handlePostLoginRedirect()
     } else {
-      setErrorMessage('Código de acesso ou identificador inválido.')
+      setErrorMessage('Código de acesso ou identificador inválido ou desativado.')
     }
   }
 
@@ -59,6 +77,7 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
         description: 'Painel carregado com suas permissões.',
       })
       onClose()
+      handlePostLoginRedirect()
     } else {
       setErrorMessage('E-mail ou senha incorretos. Verifique suas credenciais.')
     }
@@ -176,6 +195,27 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={() => handleQuickLogin('organizador@sesc.com')}
+                  disabled={loading}
+                  className="justify-between text-left h-auto py-2.5 px-3 border-pink-200 bg-pink-50/70 hover:bg-pink-100 text-[#1A1A1A] rounded-xl text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#E11D74]" />
+                    <div>
+                      <strong className="block font-bold text-[#1A1A1A]">
+                        Coord. Mariana Dias (Comissão Organizadora)
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        organizador@sesc.com (token: org1)
+                      </span>
+                    </div>
+                  </div>
+                  <Users className="w-4 h-4 text-[#E11D74]" />
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => handleQuickLogin('jeangaioso@gmail.com')}
                   disabled={loading}
                   className="justify-between text-left h-auto py-2.5 px-3 border-pink-300 bg-pink-100/50 hover:bg-pink-100 text-[#1A1A1A] rounded-xl text-xs"
@@ -184,7 +224,7 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E11D74]" />
                     <div>
                       <strong className="block font-bold text-[#1A1A1A]">
-                        Comissão Organizadora (Admin Geral)
+                        Prof. Jean Gaioso (Admin Geral)
                       </strong>
                       <span className="text-[11px] text-slate-500">jeangaioso@gmail.com</span>
                     </div>

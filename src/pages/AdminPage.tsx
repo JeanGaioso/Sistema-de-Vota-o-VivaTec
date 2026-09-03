@@ -34,12 +34,14 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { EvaluatorModal } from '@/components/EvaluatorModal'
 import { EvaluatorQRCodeModal } from '@/components/EvaluatorQRCodeModal'
+import { OrganizerModal } from '@/components/OrganizerModal'
 import { PostEventReportView } from '@/components/PostEventReportView'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import {
   LayoutDashboard,
   Trophy,
   Users,
+  Shield,
   ShieldAlert,
   Sparkles,
   Radio,
@@ -70,6 +72,7 @@ export default function AdminPage() {
   const [startups, setStartups] = useState<Startup[]>([])
   const [evaluations, setEvaluations] = useState<Evaluation[]>([])
   const [evaluators, setEvaluators] = useState<EvaluatorUser[]>([])
+  const [organizers, setOrganizers] = useState<EvaluatorUser[]>([])
   const [settingsStatus, setSettingsStatus] = useState<'waiting' | 'published'>('waiting')
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,6 +89,10 @@ export default function AdminPage() {
   const [editingEvaluator, setEditingEvaluator] = useState<EvaluatorUser | null>(null)
   const [qrCodeModalOpen, setQrCodeModalOpen] = useState(false)
   const [selectedEvaluatorForQr, setSelectedEvaluatorForQr] = useState<EvaluatorUser | null>(null)
+
+  // Modais da Comissão Organizadora
+  const [organizerModalOpen, setOrganizerModalOpen] = useState(false)
+  const [editingOrganizer, setEditingOrganizer] = useState<EvaluatorUser | null>(null)
 
   const [publishModalOpen, setPublishModalOpen] = useState(false)
   const [unpublishModalOpen, setUnpublishModalOpen] = useState(false)
@@ -116,9 +123,21 @@ export default function AdminPage() {
       setEvaluations(evalsList)
       setSettingsStatus(status)
       setAuditLogs(logs)
-      // Filtrar apenas avaliadores (ou usuários com role = evaluator)
+      // Separar organizadores (role = 'organizer' ou 'admin') e jurados da banca (role = 'evaluator' ou qualquer usuário com is_evaluator = true)
+      const orgs = evalsUsers.filter(
+        (u) =>
+          u.role === 'organizer' ||
+          u.role === 'admin' ||
+          u.email.toLowerCase() === 'jeangaioso@gmail.com',
+      )
+      setOrganizers(orgs)
+
+      // Jurados: papel de avaliador ou organizador com condição de avaliador ativa
       const jurados = evalsUsers.filter(
-        (u) => u.role === 'evaluator' || u.email.includes('evaluator') || u.role !== 'admin',
+        (u) =>
+          u.role === 'evaluator' ||
+          (u.role === 'organizer' && u.is_evaluator === true) ||
+          (u.role !== 'admin' && u.role !== 'organizer'),
       )
       setEvaluators(jurados)
     } catch (err) {
@@ -458,7 +477,7 @@ export default function AdminPage() {
   const handleResetEvaluatorPassword = async (evaluator: EvaluatorUser) => {
     if (
       !window.confirm(
-        `Deseja redefinir a senha do jurado "${evaluator.name}" para a senha padrão "Vivatec@2026"?`,
+        `Deseja redefinir a senha do usuário "${evaluator.name}" para a senha padrão "Vivatec@2026"?`,
       )
     ) {
       return
@@ -466,8 +485,8 @@ export default function AdminPage() {
     try {
       await evaluatorsService.resetPassword(evaluator.id, 'Vivatec@2026')
       await auditLogsService.log(
-        'SENHA_JURADO_REDEFINIDA',
-        `A comissão redefiniu a senha do jurado ${evaluator.name} para o padrão do evento.`,
+        'SENHA_REDEFINIDA',
+        `A comissão redefiniu a senha de ${evaluator.name} (${evaluator.email}) para o padrão Vivatec@2026.`,
       )
       toast({
         title: 'Senha Redefinida!',
@@ -479,7 +498,107 @@ export default function AdminPage() {
       const errorMsg = getErrorMessage(err)
       toast({
         title: 'Erro ao Redefinir Senha',
-        description: errorMsg || 'Não foi possível redefinir a senha do jurado.',
+        description: errorMsg || 'Não foi possível redefinir a senha.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  // Handlers para Comissão Organizadora
+  const handleOpenAddOrganizer = () => {
+    setEditingOrganizer(null)
+    setOrganizerModalOpen(true)
+  }
+
+  const handleOpenEditOrganizer = (org: EvaluatorUser) => {
+    setEditingOrganizer(org)
+    setOrganizerModalOpen(true)
+  }
+
+  const handleToggleActiveOrganizer = async (org: EvaluatorUser) => {
+    const nextState = org.is_active === false
+    try {
+      await evaluatorsService.toggleActive(org.id, org.is_active !== false)
+      await auditLogsService.log(
+        nextState ? 'ORGANIZADOR_ATIVADO' : 'ORGANIZADOR_DESATIVADO',
+        `Membro da comissão "${org.name}" foi ${nextState ? 'reativado' : 'desativado'}.`,
+      )
+      toast({
+        title: nextState ? 'Organizador Ativado' : 'Organizador Desativado',
+        description: `${org.name} foi ${nextState ? 'reativado' : 'desativado'} com sucesso.`,
+      })
+      fetchAllAdminData()
+    } catch (err) {
+      console.error('Erro ao alterar status do organizador:', err)
+      toast({
+        title: 'Erro ao Alterar Status',
+        description: 'Não foi possível atualizar o status do organizador.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleToggleEvaluatorRole = async (org: EvaluatorUser) => {
+    const isCurrentlyEvaluator = org.is_evaluator === true
+    try {
+      await evaluatorsService.toggleEvaluatorRole(org.id, isCurrentlyEvaluator)
+      await auditLogsService.log(
+        !isCurrentlyEvaluator ? 'CONDICAO_AVALIADOR_ATIVADA' : 'CONDICAO_AVALIADOR_DESATIVADA',
+        `Condição de avaliador para o organizador "${org.name}" (${org.email}) foi ${
+          !isCurrentlyEvaluator ? 'ATIVADA' : 'DESATIVADA'
+        }.`,
+      )
+      toast({
+        title: !isCurrentlyEvaluator
+          ? 'Condição de Avaliador Ativada!'
+          : 'Condição de Avaliador Desativada',
+        description: !isCurrentlyEvaluator
+          ? `${org.name} agora pode acessar o módulo /avaliar e dar notas às startups.`
+          : `${org.name} não tem mais acesso de avaliação (mantém acesso administrativo).`,
+      })
+      fetchAllAdminData()
+    } catch (err) {
+      console.error('Erro ao alternar condição de avaliador:', err)
+      toast({
+        title: 'Erro ao Atualizar Permissão',
+        description: 'Não foi possível alterar a condição de avaliador.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleDeleteOrganizer = async (org: EvaluatorUser) => {
+    if (org.role === 'admin' || org.email.toLowerCase() === 'jeangaioso@gmail.com') {
+      toast({
+        title: 'Ação Bloqueada',
+        description: 'O administrador principal do sistema não pode ser removido.',
+        variant: 'destructive',
+      })
+      return
+    }
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir o membro da comissão "${org.name}"? Recomendamos apenas desativá-lo para preservar registros.`,
+      )
+    ) {
+      return
+    }
+    try {
+      await evaluatorsService.delete(org.id)
+      await auditLogsService.log(
+        'ORGANIZADOR_EXCLUIDO',
+        `Membro da comissão "${org.name}" (${org.email}) foi excluído do sistema.`,
+      )
+      toast({
+        title: 'Organizador Excluído',
+        description: 'O membro foi removido com sucesso.',
+      })
+      fetchAllAdminData()
+    } catch (err) {
+      console.error('Erro ao excluir organizador:', err)
+      toast({
+        title: 'Erro ao Excluir',
+        description: 'Não foi possível remover o organizador.',
         variant: 'destructive',
       })
     }
@@ -560,22 +679,24 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-5 rounded-2xl border-2 border-slate-200 bg-white shadow-xs">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-            Startups Concorrentes
+            Comissão Organizadora
           </span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-3xl font-black text-[#1A1A1A]">{startups.length}</span>
-            <span className="text-xs text-slate-500 font-medium">equipes</span>
+            <span className="text-3xl font-black text-[#E11D74]">{organizers.length}</span>
+            <span className="text-xs text-slate-500 font-medium">
+              ({organizers.filter((o) => o.is_evaluator).length} avaliando)
+            </span>
           </div>
         </Card>
 
         <Card className="p-5 rounded-2xl border-2 border-slate-200 bg-white shadow-xs">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-            Jurados da Banca
+            Banca Examinadora
           </span>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-3xl font-black text-emerald-700">{evaluators.length}</span>
             <span className="text-xs text-slate-500 font-medium">
-              ({evaluators.filter((ev) => ev.is_active !== false).length} ativos)
+              ({evaluators.filter((ev) => ev.is_active !== false).length} jurados)
             </span>
           </div>
         </Card>
@@ -609,12 +730,18 @@ export default function AdminPage() {
 
       {/* TABS DO ADMIN: Monitor de Ranking, Gestão de Startups, Avaliações Individuais, Logs de Auditoria */}
       <Tabs defaultValue="monitor" className="w-full space-y-6">
-        <TabsList className="bg-slate-200/80 p-1.5 rounded-2xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 w-full gap-1">
+        <TabsList className="bg-slate-200/80 p-1.5 rounded-2xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 w-full gap-1">
           <TabsTrigger
             value="monitor"
             className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
           >
             <Trophy className="w-4 h-4 mr-1.5 inline" /> Monitor & Ranking
+          </TabsTrigger>
+          <TabsTrigger
+            value="organizers"
+            className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
+          >
+            <Users className="w-4 h-4 mr-1.5 inline" /> Comissão Organizadora
           </TabsTrigger>
           <TabsTrigger
             value="evaluators"
@@ -632,7 +759,7 @@ export default function AdminPage() {
             value="startups"
             className="rounded-xl text-xs font-bold py-2.5 data-[state=active]:bg-[#E11D74] data-[state=active]:text-white"
           >
-            <Users className="w-4 h-4 mr-1.5 inline" /> Startups & Equipes
+            <Trophy className="w-4 h-4 mr-1.5 inline" /> Startups & Equipes
           </TabsTrigger>
           <TabsTrigger
             value="audit"
@@ -983,6 +1110,242 @@ export default function AdminPage() {
                   </div>
                 )
               })}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* TAB: GESTÃO DA COMISSÃO ORGANIZADORA (CRUD COMPLETO + TOGGLE AVALIADOR) */}
+        <TabsContent value="organizers" className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-pink-100 text-[#E11D74] border border-pink-200">
+                  Comissão Viva Tec
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  Coordenação e Organização
+                </span>
+              </div>
+              <h3 className="text-lg font-black text-[#1A1A1A] mt-1">
+                Cadastro da Comissão Organizadora
+              </h3>
+              <p className="text-xs text-slate-500">
+                Gerencie os membros da comissão organizadora com acesso administrativo. Ative ou
+                desative individualmente a <strong>condição de avaliador</strong> para permitir ou
+                restringir o acesso ao módulo da banca examinadora.
+              </p>
+            </div>
+            <Button
+              onClick={handleOpenAddOrganizer}
+              className="bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold text-xs h-10 px-4 rounded-xl shadow-md flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Cadastrar Novo Organizador
+            </Button>
+          </div>
+
+          <div className="bg-white rounded-3xl border-2 border-slate-200 shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-100 text-[11px] font-extrabold text-slate-600 uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th className="py-3.5 px-4">Organizador (Nome)</th>
+                    <th className="py-3.5 px-4">E-mail / Credencial</th>
+                    <th className="py-3.5 px-4 text-center">Papel / Perfil</th>
+                    <th className="py-3.5 px-4 text-center">Status Geral</th>
+                    <th className="py-3.5 px-4 text-center">Condição de Avaliador</th>
+                    <th className="py-3.5 px-4 text-center">Ações & Acesso</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {organizers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-slate-500 italic">
+                        Nenhum organizador listado. Clique em "Cadastrar Novo Organizador" acima.
+                      </td>
+                    </tr>
+                  ) : (
+                    organizers.map((org) => {
+                      const isActive = org.is_active !== false
+                      const isEval = org.is_evaluator === true
+                      const isSuperAdmin =
+                        org.role === 'admin' || org.email.toLowerCase() === 'jeangaioso@gmail.com'
+
+                      return (
+                        <tr
+                          key={org.id}
+                          className={`hover:bg-pink-50/30 transition-colors ${
+                            !isActive ? 'opacity-60 bg-slate-50' : ''
+                          }`}
+                        >
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
+                                  isSuperAdmin
+                                    ? 'bg-[#1A1A1A] text-white shadow-sm'
+                                    : 'bg-[#E11D74] text-white shadow-sm'
+                                }`}
+                              >
+                                {org.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-bold text-[#1A1A1A] block">{org.name}</span>
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                                  <span>Token:</span>
+                                  <code className="font-mono text-[#E11D74] font-semibold">
+                                    {org.quick_token || org.email.split('@')[0]}
+                                  </code>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-4 px-4">
+                            <span className="text-xs text-slate-700 font-medium block">
+                              {org.email}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              Senha inicial: <code className="text-slate-600">Vivatec@2026</code>
+                            </span>
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            {isSuperAdmin ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-[#1A1A1A] text-white">
+                                <Shield className="w-3 h-3 text-[#E11D74]" /> Admin Geral
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-pink-100 text-[#E11D74] border border-pink-200">
+                                <Users className="w-3 h-3" /> Comissão
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Status Geral (Ativo/Desativado) */}
+                          <td className="py-4 px-4 text-center">
+                            {isActive ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />{' '}
+                                Ativo
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">
+                                Desativado
+                              </span>
+                            )}
+                          </td>
+
+                          {/* BOTÃO ATIVAR/DESATIVAR CONDIÇÃO DE AVALIADOR */}
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex flex-col items-center gap-1.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleToggleEvaluatorRole(org)}
+                                disabled={!isActive}
+                                className={`h-8 px-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                                  isEval
+                                    ? 'bg-pink-50 border-[#E11D74] text-[#E11D74] hover:bg-pink-100 hover:border-[#BE185D]'
+                                    : 'bg-slate-100 border-slate-300 text-slate-600 hover:bg-slate-200'
+                                }`}
+                                title={
+                                  isEval
+                                    ? 'Clique para desativar a condição de avaliador'
+                                    : 'Clique para ativar a condição de avaliador deste organizador'
+                                }
+                              >
+                                <Power
+                                  className={`w-3.5 h-3.5 ${
+                                    isEval ? 'text-[#E11D74]' : 'text-slate-400'
+                                  }`}
+                                />
+                                <span>{isEval ? 'Avaliador: ATIVO' : 'Avaliador: NÃO'}</span>
+                              </Button>
+                              <span className="text-[10px] text-slate-400 leading-tight">
+                                {isEval ? 'Aparece na banca e avalia' : 'Apenas administrativo'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Ações & Acesso */}
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {/* Botão QR Code & Token */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenQrCode(org)}
+                                className="h-8 px-2.5 rounded-lg text-xs font-bold border-pink-200 hover:bg-pink-50 text-[#E11D74]"
+                                title="Visualizar QR Code e credencial de login rápido"
+                              >
+                                <QrCode className="w-3.5 h-3.5 mr-1" />
+                                <span>QR / Token</span>
+                              </Button>
+
+                              {/* Botão Editar Dados Básicos */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenEditOrganizer(org)}
+                                className="h-8 px-2.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100"
+                                title="Editar dados, e-mail e permissão"
+                              >
+                                <Edit className="w-3.5 h-3.5 mr-1" />
+                                <span>Editar</span>
+                              </Button>
+
+                              {/* Botão Redefinir Senha */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleResetEvaluatorPassword(org)}
+                                className="h-8 px-2 rounded-lg text-xs font-bold text-slate-500 hover:text-amber-700 hover:bg-amber-50"
+                                title="Redefinir senha para Vivatec@2026"
+                              >
+                                <KeyRound className="w-3.5 h-3.5" />
+                              </Button>
+
+                              {/* Botão Ativar / Desativar Organizador */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleToggleActiveOrganizer(org)}
+                                disabled={isSuperAdmin}
+                                className={`h-8 px-2.5 rounded-lg text-xs font-bold ${
+                                  isActive
+                                    ? 'text-amber-700 hover:bg-amber-50'
+                                    : 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
+                                }`}
+                                title={
+                                  isActive
+                                    ? 'Desativar organizador (impede login sem apagar histórico)'
+                                    : 'Reativar organizador'
+                                }
+                              >
+                                <Power className="w-3.5 h-3.5 mr-1" />
+                                <span>{isActive ? 'Desativar' : 'Ativar'}</span>
+                              </Button>
+
+                              {/* Botão Excluir */}
+                              {!isSuperAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteOrganizer(org)}
+                                  className="h-8 px-2 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700"
+                                  title="Excluir organizador permanentemente"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </TabsContent>
@@ -1599,6 +1962,14 @@ export default function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* MODAL DE CADASTRO/EDIÇÃO DE ORGANIZADOR DA COMISSÃO */}
+      <OrganizerModal
+        isOpen={organizerModalOpen}
+        onClose={() => setOrganizerModalOpen(false)}
+        organizer={editingOrganizer}
+        onSuccess={fetchAllAdminData}
+      />
 
       {/* MODAL DE CADASTRO/EDIÇÃO DE JURADO (PENDÊNCIA 1) */}
       <EvaluatorModal

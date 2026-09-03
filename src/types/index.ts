@@ -117,12 +117,15 @@ export const EVALUATION_CRITERIA: CriteriaConfig[] = [
   },
 ]
 
+export type UserRole = 'admin' | 'organizer' | 'evaluator'
+
 export interface EvaluatorUser {
   id: string
   name: string
   email: string
-  role?: 'admin' | 'evaluator'
+  role?: UserRole
   is_active?: boolean
+  is_evaluator?: boolean
   quick_token?: string
   avatar?: string
   created?: string

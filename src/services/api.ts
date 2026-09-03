@@ -2,9 +2,26 @@ import pb from '@/lib/pocketbase/client'
 import { Startup, Evaluation, Setting, AuditLog, EvaluatorUser } from '@/types'
 
 export const evaluatorsService = {
+  // Retorna avaliadores: jurados puros ou membros da comissão com is_evaluator === true
   async getAll(): Promise<EvaluatorUser[]> {
     return await pb.collection('users').getFullList<EvaluatorUser>({
-      filter: 'role = "evaluator"',
+      filter: 'role = "evaluator" || is_evaluator = true',
+      sort: 'name',
+    })
+  },
+
+  // Retorna especificamente jurados da banca
+  async getBancaJurados(): Promise<EvaluatorUser[]> {
+    return await pb.collection('users').getFullList<EvaluatorUser>({
+      filter: 'role = "evaluator" || (role = "organizer" && is_evaluator = true)',
+      sort: 'name',
+    })
+  },
+
+  // Retorna organizadores da comissão
+  async getOrganizers(): Promise<EvaluatorUser[]> {
+    return await pb.collection('users').getFullList<EvaluatorUser>({
+      filter: 'role = "organizer" || role = "admin"',
       sort: 'name',
     })
   },
@@ -24,24 +41,32 @@ export const evaluatorsService = {
     email: string
     password?: string
     quick_token?: string
+    role?: 'admin' | 'organizer' | 'evaluator'
+    is_evaluator?: boolean
   }): Promise<EvaluatorUser> {
     const passwordToUse =
       data.password && data.password.trim().length >= 8 ? data.password.trim() : 'Vivatec@2026'
+    const roleToUse = data.role || 'evaluator'
+    const prefix = roleToUse === 'organizer' ? 'org' : 'eval'
     const token =
       data.quick_token?.trim() ||
       data.email
         .split('@')[0]
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '') ||
-      `eval${Math.floor(Math.random() * 9000 + 1000)}`
+      `${prefix}${Math.floor(Math.random() * 9000 + 1000)}`
+
+    // Se evaluator, is_evaluator é true por padrão. Se organizer, respeita o recebido ou false
+    const isEval = data.is_evaluator !== undefined ? data.is_evaluator : roleToUse === 'evaluator'
 
     const userRecord = await pb.collection('users').create<EvaluatorUser>({
       email: data.email.trim(),
       password: passwordToUse,
       passwordConfirm: passwordToUse,
       name: data.name.trim(),
-      role: 'evaluator',
+      role: roleToUse,
       is_active: true,
+      is_evaluator: isEval,
       quick_token: token,
       emailVisibility: false,
     })
@@ -55,6 +80,8 @@ export const evaluatorsService = {
       name?: string
       email?: string
       is_active?: boolean
+      is_evaluator?: boolean
+      role?: 'admin' | 'organizer' | 'evaluator'
       quick_token?: string
       password?: string
     },
@@ -63,6 +90,8 @@ export const evaluatorsService = {
     if (data.name !== undefined) payload.name = data.name.trim()
     if (data.email !== undefined) payload.email = data.email.trim()
     if (data.is_active !== undefined) payload.is_active = data.is_active
+    if (data.is_evaluator !== undefined) payload.is_evaluator = data.is_evaluator
+    if (data.role !== undefined) payload.role = data.role
     if (data.quick_token !== undefined) payload.quick_token = data.quick_token.trim()
     if (data.password && data.password.trim().length >= 8) {
       payload.password = data.password.trim()
@@ -74,6 +103,12 @@ export const evaluatorsService = {
   async toggleActive(id: string, currentState: boolean): Promise<EvaluatorUser> {
     return await pb.collection('users').update<EvaluatorUser>(id, {
       is_active: !currentState,
+    })
+  },
+
+  async toggleEvaluatorRole(id: string, currentEvaluatorState: boolean): Promise<EvaluatorUser> {
+    return await pb.collection('users').update<EvaluatorUser>(id, {
+      is_evaluator: !currentEvaluatorState,
     })
   },
 

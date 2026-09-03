@@ -2,13 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { AuthModel } from 'pocketbase'
 
+export type UserRole = 'admin' | 'organizer' | 'evaluator'
+
 export interface UserProfile {
   id: string
   email: string
   name: string
-  role: 'admin' | 'evaluator'
+  role: UserRole
   avatar?: string
   is_active?: boolean
+  is_evaluator?: boolean
   quick_token?: string
 }
 
@@ -16,8 +19,11 @@ interface AuthContextType {
   user: UserProfile | null
   rawModel: AuthModel | null
   isAuthenticated: boolean
-  isAdmin: boolean
-  isEvaluator: boolean
+  isAdmin: boolean // admin geral ou organizador da comissão (ambos têm acesso administrativo)
+  isMasterAdmin: boolean // admin super/root (role === 'admin')
+  isOrganizer: boolean // organizador (role === 'organizer')
+  isEvaluator: boolean // condição de avaliador ativa (pode avaliar e aparecer na banca)
+  canEvaluate: boolean // sinônimo explícito para isEvaluator
   isLoading: boolean
   login: (email: string, password?: string) => Promise<boolean>
   loginWithTokenOrQuickAccess: (emailOrToken: string) => Promise<boolean>
@@ -36,17 +42,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRawModel(model)
     if (pb.authStore.isValid && model) {
       const email = model.email || ''
-      const isAdminUser =
-        model.role === 'admin' ||
-        email.toLowerCase().includes('admin') ||
-        email.toLowerCase() === 'jeangaioso@gmail.com'
+      const isSuperAdmin = model.role === 'admin' || email.toLowerCase() === 'jeangaioso@gmail.com'
+
+      const isOrg = model.role === 'organizer'
+      const role: UserRole = isSuperAdmin ? 'admin' : isOrg ? 'organizer' : 'evaluator'
+
+      // Condição de avaliador:
+      // Se for evaluator -> true (a menos que explicitamente falso)
+      // Se for admin/organizer -> checar model.is_evaluator === true (ou admin default true)
+      const canEval =
+        model.role === 'evaluator'
+          ? model.is_evaluator !== false
+          : model.is_evaluator === true || isSuperAdmin
+
+      let defaultName = 'Avaliador da Banca'
+      if (isSuperAdmin) defaultName = 'Comissão Organizadora (Admin Geral)'
+      else if (isOrg) defaultName = 'Comissão Organizadora'
+
       setUser({
         id: model.id,
         email: email,
-        name: model.name || (isAdminUser ? 'Comissão Organizadora (Admin)' : 'Avaliador da Banca'),
-        role: isAdminUser ? 'admin' : 'evaluator',
+        name: model.name || defaultName,
+        role,
         avatar: model.avatar,
         is_active: model.is_active !== false,
+        is_evaluator: canEval,
         quick_token: model.quick_token || '',
       })
     } else {
@@ -140,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn('Busca por quick_token falhou, usando fallback:', err)
     }
 
-    // 3. Se for token predefinido de jurado ou admin (fallback de contingência)
+    // 3. Se for token predefinido de jurado, organizador ou admin (fallback de contingência)
     const tokenMap: Record<string, string> = {
       admin: 'jeangaioso@gmail.com',
       'sesc-admin': 'jeangaioso@gmail.com',
@@ -151,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       eval2: 'evaluator2@sesc.com',
       banca2: 'evaluator2@sesc.com',
       tec3: 'profmauro@vivatec.com.br',
+      org1: 'organizador@sesc.com',
     }
 
     const mappedEmail = tokenMap[clean.toLowerCase()]
@@ -172,8 +193,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRawModel(null)
   }
 
-  const isAdmin = user?.role === 'admin'
-  const isEvaluator = user?.role === 'evaluator'
+  const isMasterAdmin = user?.role === 'admin'
+  const isOrganizer = user?.role === 'organizer'
+  // Qualquer membro da Comissão Organizadora (admin ou organizer) possui acesso administrativo ao painel
+  const isAdmin = isMasterAdmin || isOrganizer
+  // Condição de avaliador ativa
+  const canEvaluate = !!user?.is_evaluator && user?.is_active !== false
+  const isEvaluator = canEvaluate
 
   return (
     <AuthContext.Provider
@@ -182,7 +208,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         rawModel,
         isAuthenticated: !!user,
         isAdmin,
+        isMasterAdmin,
+        isOrganizer,
         isEvaluator,
+        canEvaluate,
         isLoading,
         login,
         loginWithTokenOrQuickAccess,

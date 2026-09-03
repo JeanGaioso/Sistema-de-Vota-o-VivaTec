@@ -44,6 +44,7 @@ routerAdd('POST', '/backend/v1/quick-login', (e) => {
       eval2: 'evaluator2@sesc.com',
       banca2: 'evaluator2@sesc.com',
       tec3: 'profmauro@vivatec.com.br',
+      org1: 'organizador@sesc.com',
     }
     const mappedEmail = tokenMap[input.toLowerCase()]
     if (mappedEmail) {
@@ -54,12 +55,12 @@ routerAdd('POST', '/backend/v1/quick-login', (e) => {
   }
 
   if (!userRecord) {
-    return e.json(404, { message: 'Credencial ou jurado não encontrado para o token fornecido.' })
+    return e.json(404, { message: 'Credencial de acesso não encontrada para o token fornecido.' })
   }
 
-  // Verificar se o jurado está ativo
+  // Verificar se o usuário está ativo
   if (userRecord.get('is_active') === false) {
-    return e.json(403, { message: 'Acesso negado: avaliador desativado pela comissão.' })
+    return e.json(403, { message: 'Acesso negado: usuário desativado pela comissão organizadora.' })
   }
 
   // Gerar token de autenticação oficial do PocketBase para o registro (v0.23+ usa record.newAuthToken())
@@ -72,6 +73,7 @@ routerAdd('POST', '/backend/v1/quick-login', (e) => {
       email: userRecord.email(),
       name: userRecord.get('name') || '',
       role: userRecord.get('role') || 'evaluator',
+      is_evaluator: userRecord.get('is_evaluator') === true,
       avatar: userRecord.get('avatar') || '',
       is_active: userRecord.get('is_active') !== false,
       quick_token: userRecord.get('quick_token') || '',

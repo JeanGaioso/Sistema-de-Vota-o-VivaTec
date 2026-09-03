@@ -319,6 +319,34 @@ export default function EvaluatorPage() {
           <LogIn className="w-5 h-5 text-white" />
           <span>Acessar como Avaliador</span>
         </Button>
+        <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      </div>
+    )
+  }
+
+  // Se autenticado mas NÃO possui a condição de avaliador ativa
+  if (!isEvaluator) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto min-h-[60vh]">
+        <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-700 flex items-center justify-center mb-4 shadow-lg">
+          <Lock className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-black text-[#1A1A1A] mb-2">Acesso Restrito à Banca</h2>
+        <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+          Olá, <strong>{user?.name}</strong>. Sua conta de membro da Comissão Organizadora está
+          ativa, mas a <strong>condição de avaliador</strong> está desativada no momento.
+          <br />
+          Para avaliar startups ou participar da banca examinadora, solicite a ativação da sua
+          condição de avaliador no painel administrativo.
+        </p>
+        {isAdmin && (
+          <a
+            href="/admin"
+            className="inline-flex items-center gap-2 bg-[#E11D74] hover:bg-[#BE185D] text-white font-bold h-11 px-6 rounded-xl shadow-md text-sm transition-all"
+          >
+            <span>Ir para o Painel da Comissão</span>
+          </a>
+        )}
       </div>
     )
   }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T19:17:16.141Z",
+  "generatedAt": "2026-09-03T19:37:30.174Z",
   "collections": [
     {
       "name": "users",
@@ -43,7 +43,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["admin", "evaluator"]
+          "selectValues": ["admin", "organizer", "evaluator"]
         },
         {
           "name": "is_active",
@@ -54,6 +54,12 @@
         {
           "name": "quick_token",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_evaluator",
+          "type": "bool",
           "required": false,
           "system": false
         }
