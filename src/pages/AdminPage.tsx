@@ -98,6 +98,8 @@ export default function AdminPage() {
   const [esgPillar, setEsgPillar] = useState<ESGPillar>('Ambiental')
   const [synopsis, setSynopsis] = useState('')
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [briefingFile, setBriefingFile] = useState<File | null>(null)
+  const [removeBriefing, setRemoveBriefing] = useState(false)
   const [order, setOrder] = useState<number>(1)
   const [savingStartup, setSavingStartup] = useState(false)
 
@@ -230,6 +232,8 @@ export default function AdminPage() {
       setOrder(startups.length + 1)
     }
     setCoverFile(null)
+    setBriefingFile(null)
+    setRemoveBriefing(false)
     setStartupModalOpen(true)
   }
 
@@ -256,6 +260,12 @@ export default function AdminPage() {
 
       if (coverFile) {
         formData.append('cover_image', coverFile)
+      }
+
+      if (briefingFile) {
+        formData.append('briefing_file', briefingFile)
+      } else if (removeBriefing) {
+        formData.append('briefing_file', '')
       }
 
       if (editingStartup) {
@@ -843,6 +853,29 @@ export default function AdminPage() {
                       </p>
                     )}
 
+                    {s.briefing_file ? (
+                      <div className="flex items-center justify-between p-2 bg-pink-50/70 border border-pink-200 rounded-xl">
+                        <span className="text-[11px] font-bold text-[#E11D74] flex items-center gap-1.5 truncate mr-2">
+                          <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                          Briefing em PDF
+                        </span>
+                        <a
+                          href={getFileUrl('startups', s.id, s.briefing_file) || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold bg-[#E11D74] hover:bg-[#BE185D] text-white px-2 py-1 rounded-lg flex items-center gap-1 flex-shrink-0 transition-colors shadow-xs"
+                        >
+                          <Download className="w-2.5 h-2.5" />
+                          Abrir
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-400 italic flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-slate-300" />
+                        <span>Briefing ainda não enviado</span>
+                      </div>
+                    )}
+
                     <p className="text-xs text-slate-500 line-clamp-2 italic">{s.synopsis}</p>
                   </div>
 
@@ -1283,6 +1316,130 @@ export default function AdminPage() {
                 }}
                 className="h-10 rounded-xl file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#E11D74] file:text-white"
               />
+            </div>
+
+            {/* Campo Upload do Briefing (Documento de Avaliação em PDF) */}
+            <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-xs font-bold text-[#1A1A1A] flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-[#E11D74]" />
+                    Documento de Briefing (PDF)
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Critério de avaliação da banca (Score Briefing - máx 20MB)
+                  </p>
+                </div>
+                {editingStartup?.briefing_file && !removeBriefing && !briefingFile && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] bg-pink-50 text-[#E11D74] border-pink-200"
+                  >
+                    PDF Cadastrado
+                  </Badge>
+                )}
+              </div>
+
+              {/* Status do arquivo atual na edição */}
+              {editingStartup?.briefing_file && !removeBriefing && !briefingFile && (
+                <div className="flex items-center justify-between p-2.5 bg-white border border-pink-200 rounded-xl text-xs">
+                  <div className="flex items-center gap-2 truncate mr-2">
+                    <FileCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                    <span className="truncate font-medium text-slate-700">
+                      {editingStartup.briefing_file}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <a
+                      href={
+                        getFileUrl('startups', editingStartup.id, editingStartup.briefing_file) ||
+                        '#'
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#E11D74] bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors"
+                    >
+                      <Download className="w-3 h-3" />
+                      Visualizar
+                    </a>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRemoveBriefing(true)}
+                      className="h-7 px-2 text-[11px] font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Remover
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Aviso se usuário marcou para remover */}
+              {removeBriefing && (
+                <div className="flex items-center justify-between p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
+                  <span>O briefing atual será removido ao salvar.</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRemoveBriefing(false)}
+                    className="h-6 px-2 text-[10px] font-bold text-slate-600 hover:bg-white rounded-lg"
+                  >
+                    Desfazer
+                  </Button>
+                </div>
+              )}
+
+              {/* Input de arquivo PDF com validação */}
+              <div className="space-y-1">
+                <Input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+
+                    // Validação de tipo (PDF)
+                    if (
+                      file.type !== 'application/pdf' &&
+                      !file.name.toLowerCase().endsWith('.pdf')
+                    ) {
+                      toast({
+                        title: 'Formato Inválido',
+                        description: 'O briefing deve ser exclusivamente um arquivo PDF.',
+                        variant: 'destructive',
+                      })
+                      e.target.value = ''
+                      return
+                    }
+
+                    // Validação de tamanho (máximo 20 MB)
+                    const maxSize = 20 * 1024 * 1024
+                    if (file.size > maxSize) {
+                      toast({
+                        title: 'Arquivo Muito Grande',
+                        description: 'O arquivo PDF não pode ultrapassar 20 MB.',
+                        variant: 'destructive',
+                      })
+                      e.target.value = ''
+                      return
+                    }
+
+                    setBriefingFile(file)
+                    setRemoveBriefing(false)
+                  }}
+                  className="h-10 rounded-xl file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#1A1A1A] file:text-white"
+                />
+                {briefingFile && (
+                  <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 mt-1">
+                    <FileCheck className="w-3.5 h-3.5" />
+                    Novo arquivo selecionado: {briefingFile.name} (
+                    {(briefingFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                )}
+              </div>
             </div>
 
             <DialogFooter className="pt-2">

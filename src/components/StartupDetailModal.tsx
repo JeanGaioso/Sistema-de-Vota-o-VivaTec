@@ -19,6 +19,8 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
+  FileText,
+  ExternalLink,
 } from 'lucide-react'
 
 interface StartupDetailModalProps {
@@ -169,10 +171,28 @@ export function StartupDetailModal({ rankResult, isOpen, onClose }: StartupDetai
 
           {/* Sinopse da Jornada do Herói */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Sinopse da Jornada do Herói & Proposta
-            </h3>
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm leading-relaxed text-[#1A1A1A] font-medium">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Sinopse da Jornada do Herói & Proposta
+              </h3>
+              {startup.briefing_file ? (
+                <a
+                  href={getFileUrl('startups', startup.id, startup.briefing_file) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-pink-50 text-[#E11D74] hover:bg-pink-100 border border-pink-200 text-xs font-bold transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Ver Briefing (PDF)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              ) : (
+                <span className="text-[11px] text-slate-400 italic">
+                  Briefing ainda não enviado
+                </span>
+              )}
+            </div>
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm leading-relaxed text-[#1A1A1A] font-medium whitespace-pre-wrap">
               {startup.synopsis || 'Sem sinopse cadastrada para este herói.'}
             </div>
           </div>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T18:50:26.791Z",
+  "generatedAt": "2026-09-03T19:07:56.919Z",
   "collections": [
     {
       "name": "users",
@@ -135,6 +135,12 @@
         {
           "name": "estudantes",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "briefing_file",
+          "type": "file",
           "required": false,
           "system": false
         }

@@ -8,6 +8,7 @@ export interface Startup {
   esg_pillar: ESGPillar
   synopsis: string
   cover_image?: string
+  briefing_file?: string
   time_penalty: number
   order?: number
   created?: string

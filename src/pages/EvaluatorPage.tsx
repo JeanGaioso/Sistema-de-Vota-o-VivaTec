@@ -28,6 +28,10 @@ import {
   AlertCircle,
   RefreshCw,
   LogIn,
+  FileText,
+  ExternalLink,
+  BookOpen,
+  Info,
 } from 'lucide-react'
 
 export default function EvaluatorPage() {
@@ -416,6 +420,19 @@ export default function EvaluatorPage() {
                     </p>
                   )}
 
+                  {/* Indicação do Briefing no Card do Avaliador */}
+                  <div className="mb-2">
+                    {s.briefing_file ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E11D74] bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200">
+                        <FileText className="w-3 h-3" /> Briefing Disponível (PDF)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
+                        <Info className="w-3 h-3 text-slate-300" /> Sem Briefing
+                      </span>
+                    )}
+                  </div>
+
                   <p className="text-xs text-slate-500 line-clamp-2 italic mb-3">
                     "{s.synopsis || 'Sem sinopse cadastrada.'}"
                   </p>
@@ -451,6 +468,72 @@ export default function EvaluatorPage() {
               <h2 className="text-base font-black text-[#1A1A1A]">{selectedStartup.hero_name}</h2>
               <span className="text-xs text-[#E11D74] font-bold">{selectedStartup.name}</span>
             </div>{' '}
+          </div>
+
+          {/* PAINEL DE CONSULTA DA BANCA: JORNADA DO HERÓI COMPLETA & BRIEFING OFICIAL */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-pink-100 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-2xl bg-pink-100 text-[#E11D74] flex items-center justify-center font-black">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#1A1A1A]">
+                    Material de Consulta da Banca
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Jornada do Herói completa e documento de Briefing para subsidiar a nota
+                  </p>
+                </div>
+              </div>
+
+              {/* Botão/Link Ver Briefing ou Estado Vazio */}
+              <div>
+                {selectedStartup.briefing_file ? (
+                  <a
+                    href={
+                      getFileUrl('startups', selectedStartup.id, selectedStartup.briefing_file) ||
+                      '#'
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E11D74] hover:bg-[#BE185D] text-white text-xs font-black shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Ver Briefing (PDF)</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 text-xs font-medium">
+                    <Info className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Briefing ainda não enviado</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Informações da Equipe / Estudantes */}
+            <div className="flex flex-wrap items-center gap-3">
+              {getPillarBadge(selectedStartup.esg_pillar)}
+              {selectedStartup.estudantes && (
+                <span className="text-xs text-slate-600 bg-slate-50 px-3 py-1 rounded-xl border border-slate-200 font-medium">
+                  👥 <strong>Estudantes:</strong> {selectedStartup.estudantes}
+                </span>
+              )}
+            </div>
+
+            {/* Sinopse Completa da Jornada do Herói */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#E11D74] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                Sinopse Completa da Jornada do Herói
+              </span>
+              <div className="p-4 bg-pink-50/40 rounded-2xl border border-pink-100 text-xs sm:text-sm text-slate-800 leading-relaxed font-normal whitespace-pre-wrap">
+                {selectedStartup.synopsis?.trim()
+                  ? selectedStartup.synopsis
+                  : 'Nenhuma sinopse da jornada cadastrada para esta startup.'}
+              </div>
+            </div>
           </div>
 
           {/* Banner de Trava de Edição se já Finalizado */}
