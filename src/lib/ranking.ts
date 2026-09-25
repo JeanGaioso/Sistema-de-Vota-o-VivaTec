@@ -172,12 +172,50 @@ export function calculateRanking(
   return results
 }
 
+/**
+ * Retorna a URL pública e segura para download ou exibição de arquivos do PocketBase
+ * (briefing em PDF, imagens de capa, avatares, etc.).
+ *
+ * IMPORTANTE: Nunca deve apontar diretamente para domínios internos de infraestrutura
+ * (*.internal.goskip.dev), pois o navegador do usuário/jurado bloqueia o acesso externo
+ * com ERR_BLOCKED_BY_CLIENT / ERR_NAME_NOT_RESOLVED.
+ * No navegador, usamos sempre o caminho relativo `/api/files/...` ou a mesma origem pública
+ * (window.location.origin), que é roteada pelo gateway da aplicação tanto no preview
+ * (*.goskip.app) quanto em produção (svv.cognaia.com.br / domínio customizado).
+ */
 export function getFileUrl(
   collectionName: string,
   recordId: string,
   filename?: string,
 ): string | null {
-  if (!filename) return null
-  const baseUrl = import.meta.env.VITE_POCKETBASE_URL || ''
-  return `${baseUrl}/api/files/${collectionName}/${recordId}/${filename}`
+  if (!filename || !recordId || !collectionName) return null
+
+  // Se já for uma URL absoluta segura ou data-url, retorna direto
+  if (
+    filename.startsWith('http://') ||
+    filename.startsWith('https://') ||
+    filename.startsWith('data:') ||
+    filename.startsWith('blob:')
+  ) {
+    // Se por acaso contiver o domínio interno de build/infra, remove o domínio tornando relativo
+    if (filename.includes('.internal.goskip.dev')) {
+      return filename.replace(/^https?:\/\/[^/]+/, '')
+    }
+    return filename
+  }
+
+  const cleanFilename = filename.startsWith('/') ? filename.slice(1) : filename
+  const cleanCollection = collectionName.trim()
+  const cleanRecordId = recordId.trim()
+
+  const filePath = `/api/files/${cleanCollection}/${cleanRecordId}/${cleanFilename}`
+
+  // Em ambiente browser, retornar URL absoluta baseada no origin público atual ou relativa.
+  // Usar window.location.origin garante que links <a target="_blank"> e tags <img />
+  // abram na mesma origem pública do usuário em qualquer navegador/dispositivo sem bloqueios.
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}${filePath}`
+  }
+
+  return filePath
 }
