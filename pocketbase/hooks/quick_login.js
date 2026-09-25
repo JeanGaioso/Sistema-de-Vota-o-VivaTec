@@ -45,6 +45,7 @@ routerAdd('POST', '/backend/v1/quick-login', (e) => {
       banca2: 'evaluator2@sesc.com',
       tec3: 'profmauro@vivatec.com.br',
       org1: 'organizador@sesc.com',
+      glagla: 'glailtonrobson@yahoo.com.br',
     }
     const mappedEmail = tokenMap[input.toLowerCase()]
     if (mappedEmail) {

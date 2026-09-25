@@ -59,8 +59,19 @@ export const evaluatorsService = {
     // Se evaluator, is_evaluator é true por padrão. Se organizer, respeita o recebido ou false
     const isEval = data.is_evaluator !== undefined ? data.is_evaluator : roleToUse === 'evaluator'
 
+    // Gera um username único caso a versão do PocketBase exija unicidade em username auto-gerado
+    const baseUsername =
+      data.email
+        .split('@')[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '')
+        .slice(0, 50) || prefix
+    const randomSuffix = Math.random().toString(36).substring(2, 8)
+    const uniqueUsername = `${baseUsername}_${randomSuffix}`
+
     const userRecord = await pb.collection('users').create<EvaluatorUser>({
-      email: data.email.trim(),
+      username: uniqueUsername,
+      email: data.email.trim().toLowerCase(),
       password: passwordToUse,
       passwordConfirm: passwordToUse,
       name: data.name.trim(),

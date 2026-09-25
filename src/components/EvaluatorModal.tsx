@@ -129,9 +129,16 @@ export function EvaluatorModal({ isOpen, onClose, evaluator, onSuccess }: Evalua
     } catch (err: any) {
       console.error('Erro ao salvar jurado:', err)
       const errorDetail = getErrorMessage(err)
+      const isEmailConflict =
+        /já está cadastrado|e-mail|email/i.test(errorDetail) || /unique/i.test(err?.message || '')
+
       toast({
         title: isEditing ? 'Erro ao Atualizar Avaliador' : 'Erro ao Cadastrar Avaliador',
-        description: errorDetail || 'Verifique se o e-mail já está cadastrado.',
+        description:
+          errorDetail ||
+          (isEmailConflict
+            ? 'Este e-mail já está cadastrado por outro usuário.'
+            : 'Verifique se os dados estão preenchidos corretamente.'),
         variant: 'destructive',
       })
     } finally {

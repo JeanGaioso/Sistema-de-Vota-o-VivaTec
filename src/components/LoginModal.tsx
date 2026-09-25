@@ -155,7 +155,7 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
               <p className="text-xs font-bold text-slate-500 mb-2">
                 Atalhos de demonstração (Clique para entrar):
               </p>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-2 max-h-[260px] overflow-y-auto pr-1">
                 <Button
                   type="button"
                   variant="outline"
@@ -216,6 +216,27 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={() => handleQuickLogin('glailtonrobson@yahoo.com.br')}
+                  disabled={loading}
+                  className="justify-between text-left h-auto py-2.5 px-3 border-purple-200 bg-purple-50/60 hover:bg-purple-100 text-[#1A1A1A] rounded-xl text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-600" />
+                    <div>
+                      <strong className="block font-bold text-[#1A1A1A]">
+                        Glailton Robson (Comissão Organizadora)
+                      </strong>
+                      <span className="text-[11px] text-slate-500">
+                        glailtonrobson@yahoo.com.br (token: GlaGla)
+                      </span>
+                    </div>
+                  </div>
+                  <Users className="w-4 h-4 text-purple-600" />
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => handleQuickLogin('jeangaioso@gmail.com')}
                   disabled={loading}
                   className="justify-between text-left h-auto py-2.5 px-3 border-pink-300 bg-pink-100/50 hover:bg-pink-100 text-[#1A1A1A] rounded-xl text-xs"
@@ -224,9 +245,11 @@ export function LoginModal({ isOpen, onClose, defaultTab = 'quick' }: LoginModal
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E11D74]" />
                     <div>
                       <strong className="block font-bold text-[#1A1A1A]">
-                        Prof. Jean Gaioso (Admin Geral)
+                        Prof. Jean Gaioso (Admin Geral & Avaliador)
                       </strong>
-                      <span className="text-[11px] text-slate-500">jeangaioso@gmail.com</span>
+                      <span className="text-[11px] text-slate-500">
+                        jeangaioso@gmail.com (token: admin)
+                      </span>
                     </div>
                   </div>
                   <Shield className="w-4 h-4 text-[#E11D74]" />

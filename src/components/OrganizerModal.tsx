@@ -139,9 +139,16 @@ export function OrganizerModal({ isOpen, onClose, organizer, onSuccess }: Organi
     } catch (err: any) {
       console.error('Erro ao salvar organizador:', err)
       const errorDetail = getErrorMessage(err)
+      const isEmailConflict =
+        /já está cadastrado|e-mail|email/i.test(errorDetail) || /unique/i.test(err?.message || '')
+
       toast({
         title: isEditing ? 'Erro ao Atualizar Organizador' : 'Erro ao Cadastrar Organizador',
-        description: errorDetail || 'Verifique se o e-mail já está cadastrado no sistema.',
+        description:
+          errorDetail ||
+          (isEmailConflict
+            ? 'Este e-mail já está cadastrado por outro usuário.'
+            : 'Verifique se os dados estão preenchidos corretamente.'),
         variant: 'destructive',
       })
     } finally {
